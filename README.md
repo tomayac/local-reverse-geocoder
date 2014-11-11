@@ -22,7 +22,7 @@ var points = [
   {latitude: 48.466667, longitude: 9.133333}
 ];
 
-geocoder.lookUp(points, 1, function(err, res) {
+geocoder.lookUp(points, maxResults, function(err, res) {
   console.log(JSON.stringify(res, null, 2));
 });
 ```

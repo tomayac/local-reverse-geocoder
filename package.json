@@ -1,17 +1,12 @@
 {
   "name": "local-reverse-geocoder",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Implements a local reverse geocoder based on GeoNames",
-  "main": "app.js",
+  "main": "geocoder.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": [
-    "geocoding",
-    "geocoder",
-    "reverse",
-    "local"
-  ],
+  "keywords": ["geocoding", "geocoder", "reverse", "local"],
   "author": "Thomas Steiner",
   "license": "Apache 2.0",
   "dependencies": {

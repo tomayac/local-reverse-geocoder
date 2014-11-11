@@ -64,7 +64,7 @@ var GEONAMES_COLUMNS = [
 ];
 /* jshint maxlen: 80 */
 
-var DEBUG = true;
+var DEBUG = false;
 
 var geocoder = {
   _kdTree: null,

@@ -27,6 +27,13 @@ geocoder.lookUp(points, maxResults, function(err, res) {
 });
 ```
 
+Installation
+========
+
+```bash
+$ npm install local-reverse-geocoder
+```
+
 A Word on Accuracy
 ==============
 

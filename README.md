@@ -6,7 +6,7 @@ This library provides a local reverse geocoder for Node.js that is based on [Geo
 Usage
 ====
 
-```
+```javascript
 // With just one point
 var point = {latitude: 42.083333, longitude: 3.1};
 geocoder.lookUp(point, 1, function(err, res) {
@@ -20,7 +20,7 @@ var points = [
 ];
 geocoder.lookUp(points, 1, function(err, res) {
   console.log(JSON.stringify(res, null, 2));
- });
+});
 ```
 
 A Word on Accuracy

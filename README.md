@@ -3,10 +3,19 @@ Local Reverse Geocoder
 
 This library provides a local reverse geocoder for Node.js that is based on [GeoNames](http://download.geonames.org/export/dump/) data. It is *local* in the sense that there are no calls to a remote service like the [Google Maps API](https://developers.google.com/maps/documentation/javascript/geocoding#ReverseGeocoding) and in consequence is suitable for batch reverse geocoding. It is *reverse* in the sense that you give it a (list of) point(s), *i.e.*, a latitude/longitude pair, and it returns the closest city to that point.
 
+Installation
+========
+
+```bash
+$ npm install local-reverse-geocoder
+```
+
 Usage
 ====
 
 ```javascript
+var geocoder = require('local-reverse-geocoder');
+
 // How many results to display at max
 var maxResults = 1;
 
@@ -25,13 +34,6 @@ var points = [
 geocoder.lookUp(points, maxResults, function(err, res) {
   console.log(JSON.stringify(res, null, 2));
 });
-```
-
-Installation
-========
-
-```bash
-$ npm install local-reverse-geocoder
 ```
 
 A Word on Accuracy

@@ -7,9 +7,12 @@ Usage
 ====
 
 ```javascript
+// How many results to display at max
+var maxResults = 1;
+
 // With just one point
 var point = {latitude: 42.083333, longitude: 3.1};
-geocoder.lookUp(point, 1, function(err, res) {
+geocoder.lookUp(point, maxResults, function(err, res) {
   console.log(JSON.stringify(res, null, 2));
 });
 
@@ -18,6 +21,7 @@ var points = [
   {latitude: 42.083333, longitude: 3.1},
   {latitude: 48.466667, longitude: 9.133333}
 ];
+
 geocoder.lookUp(points, 1, function(err, res) {
   console.log(JSON.stringify(res, null, 2));
 });

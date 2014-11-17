@@ -150,10 +150,6 @@ var geocoder = {
         var a = x * x + y * y * Math.cos(lat1) * Math.cos(lat2);
         return Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
       };
-      var distanceFunc = function(a, b) {
-        return Math.pow(a.latitude - b.latitude, 2) +
-            Math.pow(a.longitude - b.longitude, 2);
-      };
       DEBUG && console.log('Started building k-d tree (this may take a while)');
       var dimensions = [
         'latitude',

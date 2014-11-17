@@ -131,24 +131,27 @@ var geocoder = {
       }
       data.push(lineObj);
     }).onComplete(function() {
-      // Distance function
-      var distanceFunc = function distance(a, b) {
-        var lat1 = a.latitude;
-        var lon1 = a.longitude;
-        var lat2 = b.latitude;
-        var lon2 = b.longitude;
-        var rad = Math.PI/180;
+      // Distance function taken from
+      // http://www.movable-type.co.uk/scripts/latlong.html
+      var distanceFunc = function distance(x, y) {
+        var toRadians = function(num) {
+          return num * Math.PI / 180;
+        };
+        var lat1 = x.latitude;
+        var lon1 = x.longitude;
+        var lat2 = y.latitude;
+        var lon2 = y.longitude;
 
-        var dLat = (lat2 - lat1) * rad;
-        var dLon = (lon2 - lon1) * rad;
-        var lat1 = lat1 * rad;
-        var lat2 = lat2 * rad;
-
-        var x = Math.sin(dLat / 2);
-        var y = Math.sin(dLon / 2);
-
-        var a = x * x + y * y * Math.cos(lat1) * Math.cos(lat2);
-        return Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        var R = 6371; // km
+        var φ1 = toRadians(lat1);
+        var φ2 = toRadians(lat2);
+        var Δφ = toRadians(lat2 - lat1);
+        var Δλ = toRadians(lon2 - lon1);
+        var a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+                Math.cos(φ1) * Math.cos(φ2) *
+                Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+        var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return R * c;
       };
       DEBUG && console.log('Started building k-d tree (this may take a while)');
       var dimensions = [

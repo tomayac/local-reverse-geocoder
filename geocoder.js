@@ -132,6 +132,24 @@ var geocoder = {
       data.push(lineObj);
     }).onComplete(function() {
       // Distance function
+      var distanceFunc = function distance(a, b) {
+        var lat1 = a.latitude;
+        var lon1 = a.longitude;
+        var lat2 = b.latitude;
+        var lon2 = b.longitude;
+        var rad = Math.PI/180;
+
+        var dLat = (lat2 - lat1) * rad;
+        var dLon = (lon2 - lon1) * rad;
+        var lat1 = lat1 * rad;
+        var lat2 = lat2 * rad;
+
+        var x = Math.sin(dLat / 2);
+        var y = Math.sin(dLon / 2);
+
+        var a = x * x + y * y * Math.cos(lat1) * Math.cos(lat2);
+        return Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+      };
       var distanceFunc = function(a, b) {
         return Math.pow(a.latitude - b.latitude, 2) +
             Math.pow(a.longitude - b.longitude, 2);

@@ -29,6 +29,8 @@
 
 'use strict';
 
+var DEBUG = true;
+
 var fs = require('fs');
 var kdTree = require('kdt');
 var request = require('request');
@@ -38,7 +40,9 @@ var async = require('async');
 
 // All data from http://download.geonames.org/export/dump/
 var GEONAMES_URL = 'http://download.geonames.org/export/dump/';
-var GEONAMES_FILE = 'cities1000';
+var CITIES_FILE = 'cities1000';
+var ADMIN_1_CODES_FILE = 'admin1CodesASCII';
+var ADMIN_2_CODES_FILE = 'admin2Codes';
 var GEONAMES_DUMP = './geonames_dump';
 /* jshint maxlen: false */
 var GEONAMES_COLUMNS = [
@@ -64,51 +68,146 @@ var GEONAMES_COLUMNS = [
 ];
 /* jshint maxlen: 80 */
 
-var DEBUG = false;
-
 var geocoder = {
   _kdTree: null,
+  _admin1Codes: null,
+  _admin2Codes: null,
 
-  _getGeoNamesData: function(callback) {
+  _getGeoNamesData: function() {
+
+  },
+
+  _getGeoNamesAdmin1CodesData: function(callback) {
     var now = (new Date()).toISOString().substr(0, 10);
-    if (fs.existsSync(GEONAMES_DUMP + '/' + now + '.csv')) {
-      DEBUG && console.log('Using cached GeoNames data from ' + GEONAMES_URL +
-          GEONAMES_FILE + '.zip');
-      return callback(null, GEONAMES_DUMP + '/' + now + '.csv');
+    if (fs.existsSync(GEONAMES_DUMP + '/admin1_codes/' + ADMIN_1_CODES_FILE +
+        '_' + now + '.csv')) {
+      DEBUG && console.log('Using cached GeoNames admin 1 codes data from ' +
+          GEONAMES_URL + ADMIN_1_CODES_FILE + '.txt');
+      return callback(null, GEONAMES_DUMP + '/admin1_codes/' +
+          ADMIN_1_CODES_FILE + '_' + now + '.csv');
     }
-    DEBUG && console.log('Getting GeoNames data from ' + GEONAMES_URL +
-        GEONAMES_FILE + '.zip (this may take a while)');
+    DEBUG && console.log('Getting GeoNames admin 1 codes data from ' +
+        GEONAMES_URL + ADMIN_1_CODES_FILE + '.txt (this may take a while)');
+    var url = GEONAMES_URL + ADMIN_1_CODES_FILE + '.txt';
+    request.get(url, function(err, response, body) {
+      if (err || response.statusCode !== 200) {
+        return callback('Error downloading GeoNames admin 1 codes data' +
+            (err ? ': ' + err : ''));
+      }
+      // Store a dump locally
+      if (!fs.existsSync(GEONAMES_DUMP + '/admin1_codes')) {
+        fs.mkdirSync(GEONAMES_DUMP + '/admin1_codes');
+      }
+      var fileName = GEONAMES_DUMP + '/admin1_codes/' + ADMIN_1_CODES_FILE +
+          '_' + now + '.csv';
+      try {
+        fs.writeFileSync(fileName, body);
+        // Housekeeping, remove old files
+        var currentFileName = ADMIN_1_CODES_FILE + '_' + now + '.csv';
+        fs.readdirSync(GEONAMES_DUMP + '/admin1_codes').forEach(function(file) {
+          if (file !== currentFileName) {
+            fs.unlink(GEONAMES_DUMP + '/admin1_codes/' + file);
+          }
+        });
+      } catch(e) {
+        throw(e);
+      }
+      return callback(null, fileName);
+    });
+  },
+
+  _parseGeoNamesAdmin1CodesCsv: function(pathToCsv, callback) {
+    return callback();
+  },
+
+  _getGeoNamesAdmin2CodesData: function(callback) {
+    var now = (new Date()).toISOString().substr(0, 10);
+    if (fs.existsSync(GEONAMES_DUMP + '/admin2_codes/' + ADMIN_2_CODES_FILE +
+        '_' + now + '.csv')) {
+      DEBUG && console.log('Using cached GeoNames admin 2 codes data from ' +
+          GEONAMES_URL + ADMIN_2_CODES_FILE + '.txt');
+      return callback(null, GEONAMES_DUMP + '/admin2_codes/' +
+          ADMIN_2_CODES_FILE + '_' + now + '.csv');
+    }
+    DEBUG && console.log('Getting GeoNames admin 2 codes data from ' +
+        GEONAMES_URL + ADMIN_2_CODES_FILE + '.txt (this may take a while)');
+    var url = GEONAMES_URL + ADMIN_2_CODES_FILE + '.txt';
+    request.get(url, function(err, response, body) {
+      if (err || response.statusCode !== 200) {
+        return callback('Error downloading GeoNames admin 2 codes data' +
+            (err ? ': ' + err : ''));
+      }
+      // Store a dump locally
+      if (!fs.existsSync(GEONAMES_DUMP + '/admin2_codes')) {
+        fs.mkdirSync(GEONAMES_DUMP + '/admin2_codes');
+      }
+      var fileName = GEONAMES_DUMP + '/admin2_codes/' + ADMIN_2_CODES_FILE +
+          '_' + now + '.csv';
+      try {
+        fs.writeFileSync(fileName, body);
+        // Housekeeping, remove old files
+        var currentFileName = ADMIN_2_CODES_FILE + '_' + now + '.csv';
+        fs.readdirSync(GEONAMES_DUMP + '/admin2_codes').forEach(function(file) {
+          if (file !== currentFileName) {
+            fs.unlink(GEONAMES_DUMP + '/admin2_codes/' + file);
+          }
+        });
+      } catch(e) {
+        throw(e);
+      }
+      return callback(null, fileName);
+    });
+  },
+
+  _parseGeoNamesAdmin2CodesCsv: function(pathToCsv, callback) {
+    return callback();
+  },
+
+  _getGeoNamesCititesData: function(callback) {
+    var now = (new Date()).toISOString().substr(0, 10);
+    if (fs.existsSync(GEONAMES_DUMP + '/cities/' + CITIES_FILE + '_' + now +
+        '.csv')) {
+      DEBUG && console.log('Using cached GeoNames cities data from ' +
+          GEONAMES_URL + CITIES_FILE + '.zip');
+      return callback(null, GEONAMES_DUMP + '/cities/' + CITIES_FILE + '_' +
+          now + '.csv');
+    }
+    DEBUG && console.log('Getting GeoNames cities data from ' + GEONAMES_URL +
+        CITIES_FILE + '.zip (this may take a while)');
     var options = {
-      url: GEONAMES_URL + GEONAMES_FILE + '.zip',
+      url: GEONAMES_URL + CITIES_FILE + '.zip',
       encoding: null
     };
     request.get(options, function(err, response, body) {
       if (err || response.statusCode !== 200) {
-        return callback('Error downloading GeoNames data' +
+        return callback('Error downloading GeoNames cities data' +
             (err ? ': ' + err : ''));
       }
-      DEBUG && console.log('Received zipped GeoNames data');
+      DEBUG && console.log('Received zipped GeoNames cities data');
       // Store a dump locally
-      if (!fs.existsSync(GEONAMES_DUMP)) {
-        fs.mkdirSync(GEONAMES_DUMP);
+      if (!fs.existsSync(GEONAMES_DUMP + '/cities')) {
+        fs.mkdirSync(GEONAMES_DUMP + '/cities');
       }
-      var oldName = GEONAMES_DUMP + '/' + GEONAMES_FILE + '.txt';
+      var oldName = GEONAMES_DUMP + '/cities/' + CITIES_FILE + '.txt';
       // Name files like a timestamp so we can easily remove old files
-      var newName = GEONAMES_DUMP + '/' + now + '.csv';
-      var fileName = GEONAMES_DUMP + '/' + now + '.zip';
+      var newName = GEONAMES_DUMP + '/cities/' + CITIES_FILE + '_' + now +
+          '.csv';
+      var fileName = GEONAMES_DUMP + '/cities/' + CITIES_FILE + '_' + now +
+          '.zip';
       try {
         fs.writeFileSync(fileName, body);
         var zipped = new zip(fileName);
-        zipped.extractEntryTo(GEONAMES_FILE + '.txt', GEONAMES_DUMP, false,
-            true);
+        zipped.extractEntryTo(CITIES_FILE + '.txt', GEONAMES_DUMP + '/cities',
+            false, true);
         fs.renameSync(oldName, newName);
-        fs.unlink(GEONAMES_DUMP + '/' + now + '.zip');
-        DEBUG && console.log('Unzipped GeoNames data');
+        fs.unlink(GEONAMES_DUMP + '/cities/' + CITIES_FILE + '_' + now +
+            '.zip');
+        DEBUG && console.log('Unzipped GeoNames cities data');
         // Housekeeping, remove old files
-        var currentFileName = now + '.csv';
-        fs.readdirSync(GEONAMES_DUMP).forEach(function(file) {
+        var currentFileName = CITIES_FILE + '_' + now + '.csv';
+        fs.readdirSync(GEONAMES_DUMP + '/cities').forEach(function(file) {
           if (file !== currentFileName) {
-            fs.unlink(GEONAMES_DUMP + '/' + file);
+            fs.unlink(GEONAMES_DUMP + '/cities/' + file);
           }
         });
       } catch(e) {
@@ -118,7 +217,7 @@ var geocoder = {
     });
   },
 
-  _parseGeoNamesCsv: function(pathToCsv, callback) {
+  _parseGeoNamesCitiesCsv: function(pathToCsv, callback) {
     var data = [];
     var lenI = GEONAMES_COLUMNS.length;
     var that = this;
@@ -166,10 +265,45 @@ var geocoder = {
 
   _init: function(callback) {
     DEBUG && console.log('Initializing local reverse geocoder');
-    async.waterfall([
-      this._getGeoNamesData.bind(this),
-      this._parseGeoNamesCsv.bind(this)
-    ], function() {
+    // Create local cache folder
+    if (!fs.existsSync(GEONAMES_DUMP)) {
+      fs.mkdirSync(GEONAMES_DUMP);
+    }
+    var that = this;
+    async.parallel([
+      // Get GeoNames cities
+      function(waterfallCallback) {
+        async.waterfall([
+          that._getGeoNamesCititesData.bind(that),
+          that._parseGeoNamesCitiesCsv.bind(that)
+        ], function() {
+          return waterfallCallback();
+        });
+      },
+      // Get GeoNames admin 1 codes
+      function(waterfallCallback) {
+        async.waterfall([
+          that._getGeoNamesAdmin1CodesData.bind(that),
+          that._parseGeoNamesAdmin1CodesCsv.bind(that)
+        ], function() {
+          return waterfallCallback();
+        });
+      },
+      // Get GeoNames admin 2 codes
+      function(waterfallCallback) {
+        async.waterfall([
+          that._getGeoNamesAdmin2CodesData.bind(that),
+          that._parseGeoNamesAdmin2CodesCsv.bind(that)
+        ], function() {
+          return waterfallCallback();
+        });
+      }
+    ],
+    // Main callback
+    function(err) {
+      if (err) {
+        throw(err);
+      }
       return callback();
     });
   },
@@ -195,6 +329,7 @@ var geocoder = {
     async.series(
       functions,
     function(err, results) {
+      DEBUG && console.log('Delivering results');
       return callback(null, results);
     });
   }

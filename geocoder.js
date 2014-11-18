@@ -40,12 +40,13 @@ var async = require('async');
 
 // All data from http://download.geonames.org/export/dump/
 var GEONAMES_URL = 'http://download.geonames.org/export/dump/';
+
 var CITIES_FILE = 'cities1000';
 var ADMIN_1_CODES_FILE = 'admin1CodesASCII';
 var ADMIN_2_CODES_FILE = 'admin2Codes';
-var GEONAMES_DUMP = './geonames_dump';
+
 /* jshint maxlen: false */
-var GEONAMES_COLUMNS = [
+var GEONAMES_CITIES_COLUMNS = [
   'geoNameId', // integer id of record in geonames database
   'name', // name of geographical point (utf8) varchar(200)
   'asciiName', // name of geographical point in plain ascii characters, varchar(200)
@@ -68,10 +69,26 @@ var GEONAMES_COLUMNS = [
 ];
 /* jshint maxlen: 80 */
 
+var GEONAMES_ADMIN_1_CODE_COLUMNS = [
+  'concatenatedCodes',
+  'name',
+  'asciiName',
+  'geoNameId'
+];
+
+var GEONAMES_ADMIN_2_CODE_COLUMNS = [
+  'concatenatedCodes',
+  'name',
+  'asciiName',
+  'geoNameId'
+];
+
+var GEONAMES_DUMP = __dirname + '/geonames_dump';
+
 var geocoder = {
   _kdTree: null,
-  _admin1Codes: null,
-  _admin2Codes: null,
+  _admin1Codes: {},
+  _admin2Codes: {},
 
   _getGeoNamesData: function() {
 
@@ -117,7 +134,21 @@ var geocoder = {
   },
 
   _parseGeoNamesAdmin1CodesCsv: function(pathToCsv, callback) {
-    return callback();
+    var that = this;
+    var lenI = GEONAMES_ADMIN_1_CODE_COLUMNS.length;
+    lazy.readFile(pathToCsv).lines().each(function(line) {
+      line = line.split('\t');
+      for (var i = 0; i < lenI; i++) {
+        var value = line[i] || null;
+        if (i === 0) {
+          that._admin1Codes[value] = {};
+        } else {
+          that._admin1Codes[line[0]][GEONAMES_ADMIN_1_CODE_COLUMNS[i]] = value;
+        }
+      }
+    }).onComplete(function() {
+      return callback();
+    });
   },
 
   _getGeoNamesAdmin2CodesData: function(callback) {
@@ -160,7 +191,21 @@ var geocoder = {
   },
 
   _parseGeoNamesAdmin2CodesCsv: function(pathToCsv, callback) {
-    return callback();
+    var that = this;
+    var lenI = GEONAMES_ADMIN_2_CODE_COLUMNS.length;
+    lazy.readFile(pathToCsv).lines().each(function(line) {
+      line = line.split('\t');
+      for (var i = 0; i < lenI; i++) {
+        var value = line[i] || null;
+        if (i === 0) {
+          that._admin2Codes[value] = {};
+        } else {
+          that._admin2Codes[line[0]][GEONAMES_ADMIN_2_CODE_COLUMNS[i]] = value;
+        }
+      }
+    }).onComplete(function() {
+      return callback();
+    });
   },
 
   _getGeoNamesCititesData: function(callback) {
@@ -219,14 +264,14 @@ var geocoder = {
 
   _parseGeoNamesCitiesCsv: function(pathToCsv, callback) {
     var data = [];
-    var lenI = GEONAMES_COLUMNS.length;
+    var lenI = GEONAMES_CITIES_COLUMNS.length;
     var that = this;
     lazy.readFile(pathToCsv).lines().each(function(line) {
       var lineObj = {};
       line = line.split('\t');
       for (var i = 0; i < lenI; i++) {
         var column = line[i] || null;
-        lineObj[GEONAMES_COLUMNS[i]] = column;
+        lineObj[GEONAMES_CITIES_COLUMNS[i]] = column;
       }
       data.push(lineObj);
     }).onComplete(function() {
@@ -259,7 +304,7 @@ var geocoder = {
       ];
       that._kdTree = kdTree.createKdTree(data, distanceFunc, dimensions);
       DEBUG && console.log('Finished building k-d tree');
-      return callback(null);
+      return callback();
     });
   },
 
@@ -308,7 +353,22 @@ var geocoder = {
     });
   },
 
-  lookUp: function(points, maxResults, callback) {
+  lookUp: function(points, arg2, arg3) {
+    var callback;
+    var maxResults;
+    if (arguments.length === 2) {
+      maxResults = 1;
+      callback = arg2;
+    } else {
+      maxResults = arg2
+      callback = arg3;
+    }
+    this._lookUp(points, maxResults, function(err, results) {
+      return callback(null, results);
+    });
+  },
+
+  _lookUp: function(points, maxResults, callback) {
     var that = this;
     // If not yet initialied, then initialize
     if (!this._kdTree) {
@@ -323,7 +383,16 @@ var geocoder = {
     var functions = [];
     points.forEach(function(point, i) {
       functions[i] = function(innerCallback) {
-        return innerCallback(null, that._kdTree.nearest(point, maxResults));
+        var result = that._kdTree.nearest(point, maxResults);
+        // Look-up of admin 1 code
+        if (result && result[0] && result[0][0]) {
+          var countryCode = result[0][0].countryCode || '';
+          var admin1Code = result[0][0].admin1Code || '';
+          result[0][0].admin1Code =
+              that._admin1Codes[countryCode + '.' + admin1Code] ||
+              result[0][0].admin1Code;
+        }
+        return innerCallback(null, result);
       };
     });
     async.series(

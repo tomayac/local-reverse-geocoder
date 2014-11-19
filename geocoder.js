@@ -29,12 +29,12 @@
 
 'use strict';
 
-var DEBUG = true;
+var DEBUG = false;
 
 var fs = require('fs');
 var kdTree = require('kdt');
 var request = require('request');
-var zip = require('adm-zip');
+var unzip = require('unzip');
 var lazy = require('lazy.js');
 var async = require('async');
 
@@ -44,9 +44,10 @@ var GEONAMES_URL = 'http://download.geonames.org/export/dump/';
 var CITIES_FILE = 'cities1000';
 var ADMIN_1_CODES_FILE = 'admin1CodesASCII';
 var ADMIN_2_CODES_FILE = 'admin2Codes';
+var ALL_COUNTRIES_FILE = 'allCountries';
 
 /* jshint maxlen: false */
-var GEONAMES_CITIES_COLUMNS = [
+var GEONAMES_COLUMNS = [
   'geoNameId', // integer id of record in geonames database
   'name', // name of geographical point (utf8) varchar(200)
   'asciiName', // name of geographical point in plain ascii characters, varchar(200)
@@ -69,14 +70,7 @@ var GEONAMES_CITIES_COLUMNS = [
 ];
 /* jshint maxlen: 80 */
 
-var GEONAMES_ADMIN_1_CODE_COLUMNS = [
-  'concatenatedCodes',
-  'name',
-  'asciiName',
-  'geoNameId'
-];
-
-var GEONAMES_ADMIN_2_CODE_COLUMNS = [
+var GEONAMES_ADMIN_CODES_COLUMNS = [
   'concatenatedCodes',
   'name',
   'asciiName',
@@ -89,9 +83,30 @@ var geocoder = {
   _kdTree: null,
   _admin1Codes: {},
   _admin2Codes: {},
+  _admin3Codes: {},
+  _admin4Codes: {},
 
-  _getGeoNamesData: function() {
+  // Distance function taken from
+  // http://www.movable-type.co.uk/scripts/latlong.html
+  _distanceFunc: function distance(x, y) {
+    var toRadians = function(num) {
+      return num * Math.PI / 180;
+    };
+    var lat1 = x.latitude;
+    var lon1 = x.longitude;
+    var lat2 = y.latitude;
+    var lon2 = y.longitude;
 
+    var R = 6371; // km
+    var φ1 = toRadians(lat1);
+    var φ2 = toRadians(lat2);
+    var Δφ = toRadians(lat2 - lat1);
+    var Δλ = toRadians(lon2 - lon1);
+    var a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+            Math.cos(φ1) * Math.cos(φ2) *
+            Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+    var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
   },
 
   _getGeoNamesAdmin1CodesData: function(callback) {
@@ -123,7 +138,7 @@ var geocoder = {
         var currentFileName = ADMIN_1_CODES_FILE + '_' + now + '.csv';
         fs.readdirSync(GEONAMES_DUMP + '/admin1_codes').forEach(function(file) {
           if (file !== currentFileName) {
-            fs.unlink(GEONAMES_DUMP + '/admin1_codes/' + file);
+            fs.unlinkSync(GEONAMES_DUMP + '/admin1_codes/' + file);
           }
         });
       } catch(e) {
@@ -135,7 +150,7 @@ var geocoder = {
 
   _parseGeoNamesAdmin1CodesCsv: function(pathToCsv, callback) {
     var that = this;
-    var lenI = GEONAMES_ADMIN_1_CODE_COLUMNS.length;
+    var lenI = GEONAMES_ADMIN_CODES_COLUMNS.length;
     lazy.readFile(pathToCsv).lines().each(function(line) {
       line = line.split('\t');
       for (var i = 0; i < lenI; i++) {
@@ -143,7 +158,7 @@ var geocoder = {
         if (i === 0) {
           that._admin1Codes[value] = {};
         } else {
-          that._admin1Codes[line[0]][GEONAMES_ADMIN_1_CODE_COLUMNS[i]] = value;
+          that._admin1Codes[line[0]][GEONAMES_ADMIN_CODES_COLUMNS[i]] = value;
         }
       }
     }).onComplete(function() {
@@ -180,7 +195,7 @@ var geocoder = {
         var currentFileName = ADMIN_2_CODES_FILE + '_' + now + '.csv';
         fs.readdirSync(GEONAMES_DUMP + '/admin2_codes').forEach(function(file) {
           if (file !== currentFileName) {
-            fs.unlink(GEONAMES_DUMP + '/admin2_codes/' + file);
+            fs.unlinkSync(GEONAMES_DUMP + '/admin2_codes/' + file);
           }
         });
       } catch(e) {
@@ -192,7 +207,7 @@ var geocoder = {
 
   _parseGeoNamesAdmin2CodesCsv: function(pathToCsv, callback) {
     var that = this;
-    var lenI = GEONAMES_ADMIN_2_CODE_COLUMNS.length;
+    var lenI = GEONAMES_ADMIN_CODES_COLUMNS.length;
     lazy.readFile(pathToCsv).lines().each(function(line) {
       line = line.split('\t');
       for (var i = 0; i < lenI; i++) {
@@ -200,7 +215,7 @@ var geocoder = {
         if (i === 0) {
           that._admin2Codes[value] = {};
         } else {
-          that._admin2Codes[line[0]][GEONAMES_ADMIN_2_CODE_COLUMNS[i]] = value;
+          that._admin2Codes[line[0]][GEONAMES_ADMIN_CODES_COLUMNS[i]] = value;
         }
       }
     }).onComplete(function() {
@@ -241,69 +256,153 @@ var geocoder = {
           '.zip';
       try {
         fs.writeFileSync(fileName, body);
-        var zipped = new zip(fileName);
-        zipped.extractEntryTo(CITIES_FILE + '.txt', GEONAMES_DUMP + '/cities',
-            false, true);
-        fs.renameSync(oldName, newName);
-        fs.unlink(GEONAMES_DUMP + '/cities/' + CITIES_FILE + '_' + now +
-            '.zip');
-        DEBUG && console.log('Unzipped GeoNames cities data');
-        // Housekeeping, remove old files
-        var currentFileName = CITIES_FILE + '_' + now + '.csv';
-        fs.readdirSync(GEONAMES_DUMP + '/cities').forEach(function(file) {
-          if (file !== currentFileName) {
-            fs.unlink(GEONAMES_DUMP + '/cities/' + file);
-          }
-        });
+        fs.createReadStream(fileName)
+          .pipe(unzip.Extract({ path: GEONAMES_DUMP + '/cities' }))
+          .on('close', function() {
+            fs.renameSync(oldName, newName);
+            fs.unlinkSync(GEONAMES_DUMP + '/cities/' + CITIES_FILE + '_' + now +
+                '.zip');
+            DEBUG && console.log('Unzipped GeoNames cities data');
+            // Housekeeping, remove old files
+            var currentFileName = CITIES_FILE + '_' + now + '.csv';
+            fs.readdirSync(GEONAMES_DUMP + '/cities').forEach(function(file) {
+              if (file !== currentFileName) {
+                fs.unlinkSync(GEONAMES_DUMP + '/cities/' + file);
+              }
+            });
+            return callback(null, newName);
+          });
       } catch(e) {
         throw(e);
       }
-      return callback(null, newName);
     });
   },
 
   _parseGeoNamesCitiesCsv: function(pathToCsv, callback) {
+    DEBUG && console.log('Started parsing cities .csv (this  may take a ' +
+        'while)');
     var data = [];
-    var lenI = GEONAMES_CITIES_COLUMNS.length;
+    var lenI = GEONAMES_COLUMNS.length;
     var that = this;
     lazy.readFile(pathToCsv).lines().each(function(line) {
       var lineObj = {};
       line = line.split('\t');
       for (var i = 0; i < lenI; i++) {
         var column = line[i] || null;
-        lineObj[GEONAMES_CITIES_COLUMNS[i]] = column;
+        lineObj[GEONAMES_COLUMNS[i]] = column;
       }
       data.push(lineObj);
     }).onComplete(function() {
-      // Distance function taken from
-      // http://www.movable-type.co.uk/scripts/latlong.html
-      var distanceFunc = function distance(x, y) {
-        var toRadians = function(num) {
-          return num * Math.PI / 180;
-        };
-        var lat1 = x.latitude;
-        var lon1 = x.longitude;
-        var lat2 = y.latitude;
-        var lon2 = y.longitude;
-
-        var R = 6371; // km
-        var φ1 = toRadians(lat1);
-        var φ2 = toRadians(lat2);
-        var Δφ = toRadians(lat2 - lat1);
-        var Δλ = toRadians(lon2 - lon1);
-        var a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
-                Math.cos(φ1) * Math.cos(φ2) *
-                Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
-        var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-        return R * c;
-      };
-      DEBUG && console.log('Started building k-d tree (this may take a while)');
+      DEBUG && console.log('Finished parsing cities .csv');
+      DEBUG && console.log('Started building cities k-d tree (this may take ' +
+          'a while)');
       var dimensions = [
         'latitude',
         'longitude'
       ];
-      that._kdTree = kdTree.createKdTree(data, distanceFunc, dimensions);
-      DEBUG && console.log('Finished building k-d tree');
+      that._kdTree = kdTree.createKdTree(data, that._distanceFunc, dimensions);
+      DEBUG && console.log('Finished building cities k-d tree');
+      return callback();
+    });
+  },
+
+  _getGeoNamesAllCountriesData: function(callback) {
+    var now = (new Date()).toISOString().substr(0, 10);
+    if (fs.existsSync(GEONAMES_DUMP + '/all_countries/' + ALL_COUNTRIES_FILE +
+        '_' + now + '.csv')) {
+      DEBUG && console.log('Using cached GeoNames all countries data from ' +
+          GEONAMES_URL + ALL_COUNTRIES_FILE + '.zip');
+      return callback(null, GEONAMES_DUMP + '/all_countries/' +
+          ALL_COUNTRIES_FILE + '_' + now + '.csv');
+    }
+    DEBUG && console.log('Getting GeoNames all countries data from ' +
+        GEONAMES_URL + ALL_COUNTRIES_FILE + '.zip (this may take a while)');
+    var options = {
+      url: GEONAMES_URL + ALL_COUNTRIES_FILE + '.zip',
+      encoding: null
+    };
+    request.get(options, function(err, response, body) {
+      if (err || response.statusCode !== 200) {
+        return callback('Error downloading GeoNames all countries data' +
+            (err ? ': ' + err : ''));
+      }
+      DEBUG && console.log('Received zipped GeoNames all countries data');
+      // Store a dump locally
+      if (!fs.existsSync(GEONAMES_DUMP + '/all_countries')) {
+        fs.mkdirSync(GEONAMES_DUMP + '/all_countries');
+      }
+      var oldName = GEONAMES_DUMP + '/all_countries/' + ALL_COUNTRIES_FILE +
+          '.txt';
+      // Name files like a timestamp so we can easily remove old files
+      var newName = GEONAMES_DUMP + '/all_countries/' + ALL_COUNTRIES_FILE +
+          '_' + now + '.csv';
+      var fileName = GEONAMES_DUMP + '/all_countries/' + ALL_COUNTRIES_FILE +
+          '_' + now + '.zip';
+      try {
+        fs.writeFileSync(fileName, body);
+        fs.createReadStream(fileName)
+          .pipe(unzip.Extract({ path: GEONAMES_DUMP + '/all_countries' }))
+          .on('close', function() {
+            fs.renameSync(oldName, newName);
+            fs.unlinkSync(GEONAMES_DUMP + '/all_countries/' +
+                ALL_COUNTRIES_FILE + '_' + now + '.zip');
+            DEBUG && console.log('Unzipped GeoNames all countries data');
+            // Housekeeping, remove old files
+            var currentFileName = ALL_COUNTRIES_FILE + '_' + now + '.csv';
+            var directory = GEONAMES_DUMP + '/all_countries';
+            fs.readdirSync(directory).forEach(function(file) {
+              if (file !== currentFileName) {
+                fs.unlinkSync(GEONAMES_DUMP + '/all_countries/' + file);
+              }
+            });
+            return callback(null, newName);
+          });
+      } catch(e) {
+        throw(e);
+      }
+    });
+  },
+
+  _parseGeoNamesAllCountriesCsv: function(pathToCsv, callback) {
+    DEBUG && console.log('Started parsing all countries .csv (this  may take ' +
+        'a while)');
+    var lenI = GEONAMES_COLUMNS.length;
+    var that = this;
+    // Indexes
+    var featureCodeIndex = GEONAMES_COLUMNS.indexOf('featureCode');
+    var countryCodeIndex = GEONAMES_COLUMNS.indexOf('countryCode');
+    var admin1CodeIndex = GEONAMES_COLUMNS.indexOf('admin1Code');
+    var admin2CodeIndex = GEONAMES_COLUMNS.indexOf('admin2Code');
+    var admin3CodeIndex = GEONAMES_COLUMNS.indexOf('admin3Code');
+    var admin4CodeIndex = GEONAMES_COLUMNS.indexOf('admin4Code');
+    var nameIndex = GEONAMES_COLUMNS.indexOf('name');
+    var asciiNameIndex = GEONAMES_COLUMNS.indexOf('asciiName');
+    var geoNameIdIndex = GEONAMES_COLUMNS.indexOf('geoNameId');
+
+    var counter = 0;
+    lazy.readFile(pathToCsv).lines().each(function(line) {
+      line = line.split('\t');
+      var featureCode = line[featureCodeIndex];
+      if ((featureCode === 'ADM3') || (featureCode === 'ADM4')) {
+        var lineObj = {
+          name: line[nameIndex],
+          asciiName: line[asciiNameIndex],
+          geoNameId: line[geoNameIdIndex]
+        };
+        var key = line[countryCodeIndex] + '.' + line[admin1CodeIndex] + '.' +
+            line[admin2CodeIndex] + '.' + line[admin3CodeIndex];
+        if (featureCode === 'ADM3') {
+          that._admin3Codes[key] = lineObj;
+        } else if (featureCode === 'ADM4') {
+          that._admin4Codes[key + '.' + line[admin4CodeIndex]] = lineObj;
+        }
+      }
+      if (counter % 100000 === 0) {
+        DEBUG && console.log('Parsing progress all countries ' + counter);
+      }
+      counter++;
+    }).onComplete(function() {
+      DEBUG && console.log('Finished parsing all countries .csv');
       return callback();
     });
   },
@@ -339,6 +438,15 @@ var geocoder = {
         async.waterfall([
           that._getGeoNamesAdmin2CodesData.bind(that),
           that._parseGeoNamesAdmin2CodesCsv.bind(that)
+        ], function() {
+          return waterfallCallback();
+        });
+      },
+      // Get GeoNames all countries
+      function(waterfallCallback) {
+        async.waterfall([
+          that._getGeoNamesAllCountriesData.bind(that),
+          that._parseGeoNamesAllCountriesCsv.bind(that)
         ], function() {
           return waterfallCallback();
         });
@@ -397,6 +505,18 @@ var geocoder = {
           var admin2CodeKey = countryCode + '.' + admin1Code + '.' + admin2Code;
           result[0][0].admin2Code = that._admin2Codes[admin2CodeKey] ||
               result[0][0].admin2Code;
+          // Look-up of admin 3 code
+          var admin3Code = result[0][0].admin3Code || '';
+          var admin3CodeKey = countryCode + '.' + admin1Code + '.' +
+              admin2Code + '.' + admin3Code;
+          result[0][0].admin3Code = that._admin3Codes[admin3CodeKey] ||
+              result[0][0].admin3Code;
+          // Look-up of admin 4 code
+          var admin4Code = result[0][0].admin4Code || '';
+          var admin4CodeKey = countryCode + '.' + admin1Code + '.' +
+              admin2Code + '.' + admin3Code + '.' + admin4Code;
+          result[0][0].admin4Code = that._admin4Codes[admin4CodeKey] ||
+              result[0][0].admin4Code;
         }
         return innerCallback(null, result);
       };

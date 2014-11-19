@@ -360,7 +360,7 @@ var geocoder = {
       maxResults = 1;
       callback = arg2;
     } else {
-      maxResults = arg2
+      maxResults = arg2;
       callback = arg3;
     }
     this._lookUp(points, maxResults, function(err, results) {
@@ -384,13 +384,19 @@ var geocoder = {
     points.forEach(function(point, i) {
       functions[i] = function(innerCallback) {
         var result = that._kdTree.nearest(point, maxResults);
-        // Look-up of admin 1 code
         if (result && result[0] && result[0][0]) {
+          // Look-up of admin 1 code
           var countryCode = result[0][0].countryCode || '';
           var admin1Code = result[0][0].admin1Code || '';
-          result[0][0].admin1Code =
-              that._admin1Codes[countryCode + '.' + admin1Code] ||
+          var admin1CodeKey = countryCode + '.' + admin1Code;
+          result[0][0].admin1Code = that._admin1Codes[admin1CodeKey] ||
               result[0][0].admin1Code;
+          // Look-up of admin 2 code
+          var geoNameId = result[0][0].geoNameId || '';
+          var admin2Code = result[0][0].admin2Code || '';
+          var admin2CodeKey = countryCode + '.' + admin1Code + '.' + admin2Code;
+          result[0][0].admin2Code = that._admin2Codes[admin2CodeKey] ||
+              result[0][0].admin2Code;
         }
         return innerCallback(null, result);
       };

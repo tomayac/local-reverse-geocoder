@@ -8,11 +8,11 @@ app.get(/geocode/, function(req, res) {
   var lat = req.query.latitude || false;
   var lon = req.query.longitude || false;
   if (!lat || !lon) {
-    return res.send(400, 'Bad Request');
+    return res.status(400).send('Bad Request');
   }
   geocoder.lookUp({latitude: lat, longitude: lon}, 1, function(err, addresses) {
     if (err) {
-      return res.send(500, err);
+      return res.status(500).send(err);
     }
     return res.send(addresses);
   });

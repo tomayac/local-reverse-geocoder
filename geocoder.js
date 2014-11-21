@@ -29,7 +29,7 @@
 
 'use strict';
 
-var DEBUG = true;
+var DEBUG = false;
 
 var fs = require('fs');
 var kdTree = require('kdt');

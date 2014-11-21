@@ -29,7 +29,7 @@
 
 'use strict';
 
-var DEBUG = false;
+var DEBUG = true;
 
 var fs = require('fs');
 var kdTree = require('kdt');
@@ -273,7 +273,8 @@ var geocoder = {
             return callback(null, newName);
           });
       } catch(e) {
-        throw(e);
+        DEBUG && console.log('Warning: ' + e);
+        return callback(null, newName);
       }
     });
   },
@@ -358,7 +359,8 @@ var geocoder = {
             return callback(null, newName);
           });
       } catch(e) {
-        throw(e);
+        DEBUG && console.log('Warning: ' + e);
+        return callback(null, newName);
       }
     });
   },

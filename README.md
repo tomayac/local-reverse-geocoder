@@ -1,8 +1,10 @@
 Local Reverse Geocoder
 ======================
 
-This library provides a local reverse geocoder for Node.js that is based on [GeoNames](http://download.geonames.org/export/dump/) data. It is *local*
-in the sense that there are no calls to a remote service like the [Google Maps API](https://developers.google.com/maps/documentation/javascript/geocoding#ReverseGeocoding),
+This library provides a local reverse geocoder for Node.js that is based on
+[GeoNames](http://download.geonames.org/export/dump/) data. It is *local*
+in the sense that there are no calls to a remote service like the
+[Google Maps API](https://developers.google.com/maps/documentation/javascript/geocoding#ReverseGeocoding),
 and in consequence the gecoder is suitable for batch reverse geocoding.
 It is *reverse* in the sense that you give it a (list of) point(s), *i.e.*,
 a latitude/longitude pair, and it returns the closest city to that point.
@@ -58,14 +60,21 @@ geocoder.lookUp(points, maxResults, function(err, res) {
 A Word on Speed
 ===============
 
-The initial lookup takes quite a while, as the geocoder has to download roughly 300MB of data
-that it then caches locally (unzipped, this occupies about 1.3GB of disk space).
-All follow-up requests are lightning fast.
+The initial lookup takes quite a while, as the geocoder has to download roughly
+300MB of data that it then caches locally (unzipped, this occupies about 1.3GB
+of disk space). All follow-up requests are lightning fast.
 
 A Word on Accuracy
 ==================
 
-By design, *i.e.*, due to the granularity of the available [GeoNames data](http://download.geonames.org/export/dump/cities1000.zip), this reverse geocoder is limited to city-level, so no streets or house numbers. In many cases this is already sufficient, but obviously your actual mileage may vary. If you need street-level granularity, you are better off with a service like Google's [reverse geocoding API](https://developers.google.com/maps/documentation/javascript/geocoding#ReverseGeocoding). (Full disclosure: the author is currently employed by Google.)
+By design, *i.e.*, due to the granularity of the available
+[GeoNames data](http://download.geonames.org/export/dump/cities1000.zip),
+this reverse geocoder is limited to city-level, so no streets or house numbers.
+In many cases this is already sufficient, but obviously your actual mileage may
+vary. If you need street-level granularity, you are better off with a service
+like Google's
+[reverse geocoding API](https://developers.google.com/maps/documentation/javascript/geocoding#ReverseGeocoding).
+(Full disclosure: the author is currently employed by Google.)
 
 License
 =======
@@ -87,4 +96,7 @@ limitations under the License.
 Acknowledgements
 ================
 
-This project was inspired by Richard Penman's Python [reverse geocoder](https://bitbucket.org/richardpenman/reverse_geocode/). It uses Ubilabs' [k-d-tree implementation](https://github.com/ubilabs/kd-tree-javascript) that was ported to Node.js by [Luke Arduini](https://github.com/luk-/node-kdt).
+This project was inspired by Richard Penman's Python
+[reverse geocoder](https://bitbucket.org/richardpenman/reverse_geocode/).
+It uses Ubilabs' [k-d-tree implementation](https://github.com/ubilabs/kd-tree-javascript)
+that was ported to Node.js by [Luke Arduini](https://github.com/luk-/node-kdt).

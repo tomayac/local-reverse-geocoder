@@ -521,31 +521,36 @@ var geocoder = {
     points.forEach(function(point, i) {
       functions[i] = function(innerCallback) {
         var result = that._kdTree.nearest(point, maxResults);
-        if (result && result[0] && result[0][0]) {
-          // Look-up of admin 1 code
-          var countryCode = result[0][0].countryCode || '';
-          var admin1Code = result[0][0].admin1Code || '';
-          var admin1CodeKey = countryCode + '.' + admin1Code;
-          result[0][0].admin1Code = that._admin1Codes[admin1CodeKey] ||
-              result[0][0].admin1Code;
-          // Look-up of admin 2 code
-          var geoNameId = result[0][0].geoNameId || '';
-          var admin2Code = result[0][0].admin2Code || '';
-          var admin2CodeKey = countryCode + '.' + admin1Code + '.' + admin2Code;
-          result[0][0].admin2Code = that._admin2Codes[admin2CodeKey] ||
-              result[0][0].admin2Code;
-          // Look-up of admin 3 code
-          var admin3Code = result[0][0].admin3Code || '';
-          var admin3CodeKey = countryCode + '.' + admin1Code + '.' +
-              admin2Code + '.' + admin3Code;
-          result[0][0].admin3Code = that._admin3Codes[admin3CodeKey] ||
-              result[0][0].admin3Code;
-          // Look-up of admin 4 code
-          var admin4Code = result[0][0].admin4Code || '';
-          var admin4CodeKey = countryCode + '.' + admin1Code + '.' +
-              admin2Code + '.' + admin3Code + '.' + admin4Code;
-          result[0][0].admin4Code = that._admin4Codes[admin4CodeKey] ||
-              result[0][0].admin4Code;
+        for (var j = 0, lenJ = result.length; j < lenJ; j++) {
+          if (result && result[j] && result[j][0]) {
+            // Look-up of admin 1 code
+            var countryCode = result[j][0].countryCode || '';
+            var admin1Code = result[j][0].admin1Code || '';
+            var admin1CodeKey = countryCode + '.' + admin1Code;
+            result[j][0].admin1Code = that._admin1Codes[admin1CodeKey] ||
+                result[j][0].admin1Code;
+            // Look-up of admin 2 code
+            var geoNameId = result[j][0].geoNameId || '';
+            var admin2Code = result[j][0].admin2Code || '';
+            var admin2CodeKey = countryCode + '.' + admin1Code + '.' +
+                admin2Code;
+            result[j][0].admin2Code = that._admin2Codes[admin2CodeKey] ||
+                result[j][0].admin2Code;
+            // Look-up of admin 3 code
+            var admin3Code = result[j][0].admin3Code || '';
+            var admin3CodeKey = countryCode + '.' + admin1Code + '.' +
+                admin2Code + '.' + admin3Code;
+            result[j][0].admin3Code = that._admin3Codes[admin3CodeKey] ||
+                result[j][0].admin3Code;
+            // Look-up of admin 4 code
+            var admin4Code = result[j][0].admin4Code || '';
+            var admin4CodeKey = countryCode + '.' + admin1Code + '.' +
+                admin2Code + '.' + admin3Code + '.' + admin4Code;
+            result[j][0].admin4Code = that._admin4Codes[admin4CodeKey] ||
+                result[j][0].admin4Code;
+            result[j][0].distance = result[j][1];
+            result[j] = result[j][0];
+          }
         }
         return innerCallback(null, result);
       };

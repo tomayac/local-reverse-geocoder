@@ -521,6 +521,7 @@ var geocoder = {
     points.forEach(function(point, i) {
       functions[i] = function(innerCallback) {
         var result = that._kdTree.nearest(point, maxResults);
+        result.reverse();
         for (var j = 0, lenJ = result.length; j < lenJ; j++) {
           if (result && result[j] && result[j][0]) {
             // Look-up of admin 1 code
@@ -548,6 +549,7 @@ var geocoder = {
                 admin2Code + '.' + admin3Code + '.' + admin4Code;
             result[j][0].admin4Code = that._admin4Codes[admin4CodeKey] ||
                 result[j][0].admin4Code;
+            // Pull in the k-d tree distance in the main object
             result[j][0].distance = result[j][1];
             result[j] = result[j][0];
           }

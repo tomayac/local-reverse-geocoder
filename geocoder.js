@@ -111,16 +111,17 @@ var geocoder = {
 
   _getGeoNamesAdmin1CodesData: function(callback) {
     var now = (new Date()).toISOString().substr(0, 10);
-    var timestampedFilename = GEONAMES_DUMP + '/admin1_codes/' + ADMIN_1_CODES_FILE +
-        '_' + now + '.csv';
+    var timestampedFilename = GEONAMES_DUMP + '/admin1_codes/' +
+        ADMIN_1_CODES_FILE + '_' + now + '.csv';
     if (fs.existsSync(timestampedFilename)) {
       DEBUG && console.log('Using cached GeoNames admin 1 codes data from ' +
           timestampedFilename);
       return callback(null, timestampedFilename);
     }
 
-    var filename = GEONAMES_DUMP + '/admin1_codes/' + ADMIN_1_CODES_FILE + '.txt';
-    if(fs.existsSync(filename)) {
+    var filename = GEONAMES_DUMP + '/admin1_codes/' + ADMIN_1_CODES_FILE +
+        '.txt';
+    if (fs.existsSync(filename)) {
       DEBUG && console.log('Using cached GeoNames admin 1 codes data from ' +
         filename);
       return callback(null, filename);
@@ -147,7 +148,7 @@ var geocoder = {
             fs.unlinkSync(GEONAMES_DUMP + '/admin1_codes/' + file);
           }
         });
-      } catch(e) {
+      } catch (e) {
         throw(e);
       }
       return callback(null, timestampedFilename);
@@ -174,16 +175,17 @@ var geocoder = {
 
   _getGeoNamesAdmin2CodesData: function(callback) {
     var now = (new Date()).toISOString().substr(0, 10);
-    var timestampedFilename = GEONAMES_DUMP + '/admin2_codes/' + ADMIN_2_CODES_FILE +
-        '_' + now + '.csv';
+    var timestampedFilename = GEONAMES_DUMP + '/admin2_codes/' +
+        ADMIN_2_CODES_FILE + '_' + now + '.csv';
     if (fs.existsSync(timestampedFilename)) {
       DEBUG && console.log('Using cached GeoNames admin 2 codes data from ' +
         timestampedFilename);
       return callback(null, timestampedFilename);
     }
 
-    var filename = GEONAMES_DUMP + '/admin2_codes/' + ADMIN_2_CODES_FILE + '.txt';
-    if(fs.existsSync(filename)) {
+    var filename = GEONAMES_DUMP + '/admin2_codes/' + ADMIN_2_CODES_FILE +
+        '.txt';
+    if (fs.existsSync(filename)) {
       DEBUG && console.log('Using cached GeoNames admin 2 codes data from ' +
       filename);
       return callback(null, filename);
@@ -210,7 +212,7 @@ var geocoder = {
             fs.unlinkSync(GEONAMES_DUMP + '/admin2_codes/' + file);
           }
         });
-      } catch(e) {
+      } catch (e) {
         throw(e);
       }
       return callback(null, timestampedFilename);
@@ -238,8 +240,8 @@ var geocoder = {
   _getGeoNamesCititesData: function(callback) {
     var now = (new Date()).toISOString().substr(0, 10);
     // Use timestamped cities file OR bare cities file
-    var timestampedFilename = GEONAMES_DUMP + '/cities/' + CITIES_FILE + '_' + now +
-        '.csv';
+    var timestampedFilename = GEONAMES_DUMP + '/cities/' + CITIES_FILE + '_' +
+        now + '.csv';
     if (fs.existsSync(timestampedFilename)) {
       DEBUG && console.log('Using cached GeoNames cities data from ' +
       timestampedFilename);
@@ -247,7 +249,7 @@ var geocoder = {
     }
 
     var filename = GEONAMES_DUMP + '/cities/' + CITIES_FILE + '.txt';
-    if(fs.existsSync(filename)) {
+    if (fs.existsSync(filename)) {
       DEBUG && console.log('Using cached GeoNames cities data from ' +
       filename);
       return callback(null, filename);
@@ -274,7 +276,7 @@ var geocoder = {
       try {
         fs.writeFileSync(zipFilename, body);
         fs.createReadStream(zipFilename)
-          .pipe(unzip.Extract({ path: GEONAMES_DUMP + '/cities' }))
+          .pipe(unzip.Extract({path: GEONAMES_DUMP + '/cities'}))
           .on('close', function() {
             fs.renameSync(filename, timestampedFilename);
             fs.unlinkSync(GEONAMES_DUMP + '/cities/' + CITIES_FILE + '_' + now +
@@ -289,7 +291,7 @@ var geocoder = {
             });
             return callback(null, timestampedFilename);
           });
-      } catch(e) {
+      } catch (e) {
         DEBUG && console.log('Warning: ' + e);
         return callback(null, timestampedFilename);
       }
@@ -326,16 +328,17 @@ var geocoder = {
 
   _getGeoNamesAllCountriesData: function(callback) {
     var now = (new Date()).toISOString().substr(0, 10);
-    var timestampedFilename = GEONAMES_DUMP + '/all_countries/' + ALL_COUNTRIES_FILE +
-        '_' + now + '.csv';
+    var timestampedFilename = GEONAMES_DUMP + '/all_countries/' +
+        ALL_COUNTRIES_FILE + '_' + now + '.csv';
     if (fs.existsSync(timestampedFilename)) {
       DEBUG && console.log('Using cached GeoNames all countries data from ' +
         timestampedFilename);
       return callback(null, timestampedFilename);
     }
 
-    var filename = GEONAMES_DUMP + '/all_countries/' + ALL_COUNTRIES_FILE + '.txt';
-    if(fs.existsSync(filename)) {
+    var filename = GEONAMES_DUMP + '/all_countries/' + ALL_COUNTRIES_FILE +
+        '.txt';
+    if (fs.existsSync(filename)) {
       DEBUG && console.log('Using cached GeoNames all countries data from ' +
       filename);
       return callback(null, filename);
@@ -362,7 +365,7 @@ var geocoder = {
       try {
         fs.writeFileSync(zipFilename, body);
         fs.createReadStream(zipFilename)
-          .pipe(unzip.Extract({ path: GEONAMES_DUMP + '/all_countries' }))
+          .pipe(unzip.Extract({path: GEONAMES_DUMP + '/all_countries'}))
           .on('close', function() {
             fs.renameSync(filename, timestampedFilename);
             fs.unlinkSync(GEONAMES_DUMP + '/all_countries/' +
@@ -378,7 +381,7 @@ var geocoder = {
             });
             return callback(null, timestampedFilename);
           });
-      } catch(e) {
+      } catch (e) {
         DEBUG && console.log('Warning: ' + e);
         return callback(null, timestampedFilename);
       }

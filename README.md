@@ -1,5 +1,5 @@
-Local Reverse Geocoder
-======================
+#Local Reverse Geocoder
+
 
 This library provides a local reverse geocoder for Node.js that is based on
 [GeoNames](http://download.geonames.org/export/dump/) data. It is *local*
@@ -9,15 +9,15 @@ and in consequence the gecoder is suitable for batch reverse geocoding.
 It is *reverse* in the sense that you give it a (list of) point(s), *i.e.*,
 a latitude/longitude pair, and it returns the closest city to that point.
 
-Installation
-============
+#Installation
 
 ```bash
 $ npm install local-reverse-geocoder
 ```
 
-Usage
-=====
+#Usage
+
+##LookUp
 
 ```javascript
 var geocoder = require('local-reverse-geocoder');
@@ -57,15 +57,55 @@ geocoder.lookUp(points, maxResults, function(err, res) {
 });
 ```
 
-A Word on Speed
-===============
+## Init
+
+You can optionally initialize the geocoder prior to the first call to lookUp.  This ensures
+that all files are loaded into the cache prior to making the first call. 
+
+```javascript
+var geocoder = require('local-reverse-geocoder');
+
+geocoder.init({}, function() {
+  // geocoder is loaded and ready to run
+});
+```
+
+Optionally init also allows you to specify which files to load data from.  This reduces 
+initialization time and the runtime memory footprint of the nodejs process.  By default
+all files are loaded.
+
+```javascript
+var geocoder = require('local-reverse-geocoder');
+
+geocoder.init({load:{admin1: true, admin2: false, admin3And4: false, alternateNames: false}}, function() {
+  // Ready to call lookUp
+});
+
+```
+
+Optionally init allows you to specify the directory that geonames files are downloaded and cached in.
+
+```javascript
+var geocoder = require('local-reverse-geocoder');
+
+geocoder.init({dumpDirectory: '/tmp/geonames'}, function() {
+  // Ready to call lookUp and all files will be downloaded to /tmp/geonames
+});
+
+```
+
+
+
+#A Word on Speed
 
 The initial lookup takes quite a while, as the geocoder has to download roughly
 300MB of data that it then caches locally (unzipped, this occupies about 1.3GB
 of disk space). All follow-up requests are lightning fast.
 
-A Word on Accuracy
-==================
+If you don't need admin1, admin2, admin3, admin4 or alternate names you can turn them
+off in a manual init call and decrease load time.
+
+#A Word on Accuracy
 
 By design, *i.e.*, due to the granularity of the available
 [GeoNames data](http://download.geonames.org/export/dump/cities1000.zip),
@@ -76,8 +116,7 @@ like Google's
 [reverse geocoding API](https://developers.google.com/maps/documentation/javascript/geocoding#ReverseGeocoding).
 (Full disclosure: the author is currently employed by Google.)
 
-License
-=======
+#License
 
 Copyright 2014 Thomas Steiner (tomac@google.com)
 
@@ -93,8 +132,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 
-Acknowledgements
-================
+#Acknowledgements
 
 This project was inspired by Richard Penman's Python
 [reverse geocoder](https://bitbucket.org/richardpenman/reverse_geocode/).

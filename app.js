@@ -30,7 +30,7 @@ app.get(/geocode/, function(req, res) {
   });
 });
 
-geocoder.init({dumpDirectory: '/pushspring/lib/geonames', load:{admin2: false, admin3And4:false, alternateNames:false}}, function() {
+geocoder.init({}, function() {
   var port = Number(process.env.PORT || 3000);
   app.listen(port, function() {
     console.log('Local reverse geocoder listening on port ' + port);

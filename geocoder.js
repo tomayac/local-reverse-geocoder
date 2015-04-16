@@ -96,11 +96,11 @@ var GEONAMES_DUMP = __dirname + '/geonames_dump';
 
 var geocoder = {
   _kdTree: null,
-  _admin1Codes: {},
-  _admin2Codes: {},
-  _admin3Codes: {},
-  _admin4Codes: {},
-  _alternateNames: {},
+  _admin1Codes: null,
+  _admin2Codes: null,
+  _admin3Codes: null,
+  _admin4Codes: null,
+  _alternateNames: null,
 
   // Distance function taken from
   // http://www.movable-type.co.uk/scripts/latlong.html
@@ -193,6 +193,7 @@ var geocoder = {
 
   _parseGeoNamesAlternateNamesCsv: function(pathToCsv, callback) {
     var that = this;
+    that._alternateNames = {};
     lazy.readFile(pathToCsv).lines().each(function(line) {
       line = line.split('\t');
       // Load postal codes
@@ -257,6 +258,7 @@ var geocoder = {
   _parseGeoNamesAdmin1CodesCsv: function(pathToCsv, callback) {
     var that = this;
     var lenI = GEONAMES_ADMIN_CODES_COLUMNS.length;
+    that._admin1Codes = {};
     lazy.readFile(pathToCsv).lines().each(function(line) {
       line = line.split('\t');
       for (var i = 0; i < lenI; i++) {
@@ -321,6 +323,7 @@ var geocoder = {
   _parseGeoNamesAdmin2CodesCsv: function(pathToCsv, callback) {
     var that = this;
     var lenI = GEONAMES_ADMIN_CODES_COLUMNS.length;
+    that._admin2Codes = {};
     lazy.readFile(pathToCsv).lines().each(function(line) {
       line = line.split('\t');
       for (var i = 0; i < lenI; i++) {
@@ -504,6 +507,8 @@ var geocoder = {
     var geoNameIdIndex = GEONAMES_COLUMNS.indexOf('geoNameId');
 
     var counter = 0;
+    that._admin3Codes = {};
+    that._admin4Codes = {};
     lazy.readFile(pathToCsv).lines().each(function(line) {
       line = line.split('\t');
       var featureCode = line[featureCodeIndex];
@@ -531,8 +536,30 @@ var geocoder = {
     });
   },
 
-  _init: function(callback) {
-    DEBUG && console.log('Initializing local reverse geocoder');
+  init: function(options, callback) {
+    options = options || {};
+    if (options.dumpDirectory) {
+      GEONAMES_DUMP = options.dumpDirectory;
+    }
+
+    options.load = options.load || {};
+    if(options.load.admin1 === undefined) {
+      options.load.admin1 = true;
+    }
+
+    if(options.load.admin2 === undefined) {
+      options.load.admin2 = true;
+    }
+
+    if(options.load.admin3And4 === undefined) {
+      options.load.admin3And4 = true;
+    }
+
+    if(options.load.alternateNames === undefined) {
+      options.load.alternateNames = true;
+    }
+
+    DEBUG && console.log('Initializing local reverse geocoder using dump directory: ' + GEONAMES_DUMP);
     // Create local cache folder
     if (!fs.existsSync(GEONAMES_DUMP)) {
       fs.mkdirSync(GEONAMES_DUMP);
@@ -550,39 +577,59 @@ var geocoder = {
       },
       // Get GeoNames admin 1 codes
       function(waterfallCallback) {
-        async.waterfall([
-          that._getGeoNamesAdmin1CodesData.bind(that),
-          that._parseGeoNamesAdmin1CodesCsv.bind(that)
-        ], function() {
-          return waterfallCallback();
-        });
+        if(options.load.admin1) {
+          async.waterfall([
+            that._getGeoNamesAdmin1CodesData.bind(that),
+            that._parseGeoNamesAdmin1CodesCsv.bind(that)
+          ], function () {
+            return waterfallCallback();
+          });
+        }
+        else {
+          return setImmediate(waterfallCallback);
+        }
       },
       // Get GeoNames admin 2 codes
       function(waterfallCallback) {
-        async.waterfall([
-          that._getGeoNamesAdmin2CodesData.bind(that),
-          that._parseGeoNamesAdmin2CodesCsv.bind(that)
-        ], function() {
-          return waterfallCallback();
-        });
+        if(options.load.admin2) {
+          async.waterfall([
+            that._getGeoNamesAdmin2CodesData.bind(that),
+            that._parseGeoNamesAdmin2CodesCsv.bind(that)
+          ], function () {
+            return waterfallCallback();
+          });
+        }
+        else {
+          return setImmediate(waterfallCallback);
+        }
       },
       // Get GeoNames all countries
       function(waterfallCallback) {
-        async.waterfall([
-          that._getGeoNamesAllCountriesData.bind(that),
-          that._parseGeoNamesAllCountriesCsv.bind(that)
-        ], function() {
-          return waterfallCallback();
-        });
+        if(options.load.admin3And4) {
+          async.waterfall([
+            that._getGeoNamesAllCountriesData.bind(that),
+            that._parseGeoNamesAllCountriesCsv.bind(that)
+          ], function () {
+            return waterfallCallback();
+          });
+        }
+        else {
+          return setImmediate(waterfallCallback);
+        }
       },
       // Get GeoNames alternate names
       function(waterfallCallback) {
-        async.waterfall([
-          that._getGeoNamesAlternateNamesData.bind(that),
-          that._parseGeoNamesAlternateNamesCsv.bind(that)
-        ], function() {
-          return waterfallCallback();
-        });
+        if(options.load.alternateNames) {
+          async.waterfall([
+            that._getGeoNamesAlternateNamesData.bind(that),
+            that._parseGeoNamesAlternateNamesCsv.bind(that)
+          ], function () {
+            return waterfallCallback();
+          });
+        }
+        else {
+          return setImmediate(waterfallCallback);
+        }
       }
     ],
     // Main callback
@@ -592,10 +639,6 @@ var geocoder = {
       }
       return callback();
     });
-  },
-
-  setDumpDirectory: function setDumpDirectory(directory) {
-    GEONAMES_DUMP = directory;
   },
 
   lookUp: function(points, arg2, arg3) {
@@ -617,7 +660,7 @@ var geocoder = {
     var that = this;
     // If not yet initialied, then initialize
     if (!this._kdTree) {
-      return this._init(function() {
+      return this.init({}, function() {
         return that.lookUp(points, maxResults, callback);
       });
     }
@@ -629,41 +672,44 @@ var geocoder = {
     points.forEach(function(point, i) {
       functions[i] = function(innerCallback) {
         var result = that._kdTree.nearest(point, maxResults);
-        result.reverse();
-        for (var j = 0, lenJ = result.length; j < lenJ; j++) {
-          if (result && result[j] && result[j][0]) {
-            // Look-up of admin 1 code
-            var countryCode = result[j][0].countryCode || '';
-            var admin1Code = result[j][0].admin1Code || '';
+        if (result && result[0] && result[0][0]) {
+          var countryCode = result[0][0].countryCode || '';
+          // Look-up of admin 1 code
+          if(that._admin1Codes) {
+            var admin1Code = result[0][0].admin1Code || '';
             var admin1CodeKey = countryCode + '.' + admin1Code;
-            result[j][0].admin1Code = that._admin1Codes[admin1CodeKey] ||
-                result[j][0].admin1Code;
-            // Look-up of admin 2 code
-            var geoNameId = result[j][0].geoNameId || '';
-            var admin2Code = result[j][0].admin2Code || '';
+            result[0][0].admin1Code = that._admin1Codes[admin1CodeKey] ||
+            result[0][0].admin1Code;
+          }
+          // Look-up of admin 2 code
+          if(that._admin2Codes) {
+            var geoNameId = result[0][0].geoNameId || '';
+            var admin2Code = result[0][0].admin2Code || '';
             var admin2CodeKey = countryCode + '.' + admin1Code + '.' +
                 admin2Code;
-            result[j][0].admin2Code = that._admin2Codes[admin2CodeKey] ||
-                result[j][0].admin2Code;
-            // Look-up of admin 3 code
-            var admin3Code = result[j][0].admin3Code || '';
+            result[0][0].admin2Code = that._admin2Codes[admin2CodeKey] ||
+            result[0][0].admin2Code;
+          }
+          // Look-up of admin 3 code
+          if(that._admin3Codes) {
+            var admin3Code = result[0][0].admin3Code || '';
             var admin3CodeKey = countryCode + '.' + admin1Code + '.' +
                 admin2Code + '.' + admin3Code;
-            result[j][0].admin3Code = that._admin3Codes[admin3CodeKey] ||
-                result[j][0].admin3Code;
-            // Look-up of admin 4 code
-            var admin4Code = result[j][0].admin4Code || '';
+            result[0][0].admin3Code = that._admin3Codes[admin3CodeKey] ||
+            result[0][0].admin3Code;
+          }
+          // Look-up of admin 4 code
+          if(that._admin4Codes) {
+            var admin4Code = result[0][0].admin4Code || '';
             var admin4CodeKey = countryCode + '.' + admin1Code + '.' +
                 admin2Code + '.' + admin3Code + '.' + admin4Code;
-            result[j][0].admin4Code = that._admin4Codes[admin4CodeKey] ||
-                result[j][0].admin4Code;
-            // Look-up of alternate name
-            result[j][0].alternateName = that._alternateNames[geoNameId] ||
-                result[j][0].alternateName;
-            // Pull in the k-d tree distance in the main object
-            result[j][0].distance = result[j][1];
-            // Simplify the output by not returning an array
-            result[j] = result[j][0];
+            result[0][0].admin4Code = that._admin4Codes[admin4CodeKey] ||
+            result[0][0].admin4Code;
+          }
+          // Look-up of alternate name
+          if(that._alternateNames) {
+            result[0][0].alternateName = that._alternateNames[geoNameId] ||
+            result[0][0].alternateName;
           }
         }
         return innerCallback(null, result);

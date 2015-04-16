@@ -9,12 +9,13 @@ It is *reverse* in the sense that you give it a (list of) point(s), *i.e.*,
 a latitude/longitude pair, and it returns the closest city to that point.
 
 # Installation
-
 ```bash
 $ npm install local-reverse-geocoder
 ```
 
 # Usage in Node.js
+
+## LookUp
 
 ```javascript
 var geocoder = require('local-reverse-geocoder');
@@ -52,6 +53,43 @@ var points = [
 geocoder.lookUp(points, maxResults, function(err, res) {
   console.log(JSON.stringify(res, null, 2));
 });
+```
+
+## Init
+
+You can optionally initialize the geocoder prior to the first call to lookUp.  This ensures
+that all files are loaded into the cache prior to making the first call. 
+
+```javascript
+var geocoder = require('local-reverse-geocoder');
+
+geocoder.init({}, function() {
+  // geocoder is loaded and ready to run
+});
+```
+
+Optionally init also allows you to specify which files to load data from.  This reduces 
+initialization time and the runtime memory footprint of the nodejs process.  By default
+all files are loaded.
+
+```javascript
+var geocoder = require('local-reverse-geocoder');
+
+geocoder.init({load:{admin1: true, admin2: false, admin3And4: false, alternateNames: false}}, function() {
+  // Ready to call lookUp
+});
+
+```
+
+Optionally init allows you to specify the directory that geonames files are downloaded and cached in.
+
+```javascript
+var geocoder = require('local-reverse-geocoder');
+
+geocoder.init({dumpDirectory: '/tmp/geonames'}, function() {
+  // Ready to call lookUp and all files will be downloaded to /tmp/geonames
+});
+
 ```
 
 # Usage of the Web Service
@@ -231,9 +269,10 @@ The initial lookup takes quite a while, as the geocoder has to download roughly
 of disk space). All follow-up requests are lightning fast.
 By default, the local [GeoNames dump](http://download.geonames.org/export/dump/) data gets refreshed each day.
 You can override this behavior by removing the timestamp from the files in the `./geonames_dump` download folder.
+If you don't need admin1, admin2, admin3, admin4 or alternate names you can turn them
+off in a manual init call and decrease load time.
 
 # License
-
 Copyright 2015 Thomas Steiner (tomac@google.com)
 
 Licensed under the Apache License, Version 2.0 (the "License");

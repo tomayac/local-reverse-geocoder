@@ -408,8 +408,6 @@ var geocoder = {
     var data = [];
     var lenI = GEONAMES_COLUMNS.length;
     var that = this;
-
-    //
     var latitudeIndex = GEONAMES_COLUMNS.indexOf('latitude');
     var longitudeIndex = GEONAMES_COLUMNS.indexOf('longitude');
 
@@ -420,10 +418,10 @@ var geocoder = {
         var column = line[i] || null;
         lineObj[GEONAMES_COLUMNS[i]] = column;
       }
-      
-      //
+
       var lng = lineObj[GEONAMES_COLUMNS[latitudeIndex]];
       var lat = lineObj[GEONAMES_COLUMNS[longitudeIndex]];
+      //dont add lineObj without lat/lng pair
       if(lng !== null && lng !== undefined && !isNaN(lng) && lat !== null && lat !== undefined && !isNaN(lat)) {
         data.push(lineObj);
       } else {

@@ -422,7 +422,8 @@ var geocoder = {
       var lng = lineObj[GEONAMES_COLUMNS[latitudeIndex]];
       var lat = lineObj[GEONAMES_COLUMNS[longitudeIndex]];
       //dont add lineObj without lat/lng pair
-      if(lng !== null && lng !== undefined && !isNaN(lng) && lat !== null && lat !== undefined && !isNaN(lat)) {
+      if(lng !== null && lng !== undefined && !isNaN(lng) && lat !== null
+        && lat !== undefined && !isNaN(lat)) {
         data.push(lineObj);
       } else {
         DEBUG && console.log('found null or undefined geo coords:', lineObj);

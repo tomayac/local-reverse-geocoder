@@ -408,6 +408,11 @@ var geocoder = {
     var data = [];
     var lenI = GEONAMES_COLUMNS.length;
     var that = this;
+
+    //
+    var latitudeIndex = GEONAMES_COLUMNS.indexOf('latitude');
+    var longitudeIndex = GEONAMES_COLUMNS.indexOf('longitude');
+
     lazy.readFile(pathToCsv).lines().each(function(line) {
       var lineObj = {};
       line = line.split('\t');
@@ -415,7 +420,15 @@ var geocoder = {
         var column = line[i] || null;
         lineObj[GEONAMES_COLUMNS[i]] = column;
       }
-      data.push(lineObj);
+      
+      //
+      var lng = lineObj[GEONAMES_COLUMNS[latitudeIndex]];
+      var lat = lineObj[GEONAMES_COLUMNS[longitudeIndex]];
+      if(lng !== null && lng !== undefined && !isNaN(lng) && lat !== null && lat !== undefined && !isNaN(lat)) {
+        data.push(lineObj);
+      } else {
+        DEBUG && console.log('found null or undefined geo coords:', lineObj);
+      }
     }).onComplete(function() {
       DEBUG && console.log('Finished parsing cities.txt');
       DEBUG && console.log('Started building cities k-d tree (this may take ' +

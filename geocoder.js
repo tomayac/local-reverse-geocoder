@@ -681,6 +681,10 @@ var geocoder = {
     }
     var functions = [];
     points.forEach(function(point, i) {
+      point = {
+		latitude: parseFloat(point.latitude),
+		longitude: parseFloat(point.longitude)
+	  };
       functions[i] = function(innerCallback) {
         var result = that._kdTree.nearest(point, maxResults);
         result.reverse();

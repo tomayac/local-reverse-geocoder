@@ -196,7 +196,7 @@ var geocoder = {
   _parseGeoNamesAlternateNamesCsv: function(pathToCsv, callback) {
     var that = this;
     that._alternateNames = {};
-    lazy.readFile(pathToCsv).lines().each(function(line) {
+    lazy.readFile(pathToCsv).split('\n').each(function(line) {
       line = line.split('\t');
       // Load postal codes
       if (line[2] === 'post') {
@@ -261,7 +261,7 @@ var geocoder = {
     var that = this;
     var lenI = GEONAMES_ADMIN_CODES_COLUMNS.length;
     that._admin1Codes = {};
-    lazy.readFile(pathToCsv).lines().each(function(line) {
+    lazy.readFile(pathToCsv).split('\n').each(function(line) {
       line = line.split('\t');
       for (var i = 0; i < lenI; i++) {
         var value = line[i] || null;
@@ -326,7 +326,7 @@ var geocoder = {
     var that = this;
     var lenI = GEONAMES_ADMIN_CODES_COLUMNS.length;
     that._admin2Codes = {};
-    lazy.readFile(pathToCsv).lines().each(function(line) {
+    lazy.readFile(pathToCsv).split('\n').each(function(line) {
       line = line.split('\t');
       for (var i = 0; i < lenI; i++) {
         var value = line[i] || null;
@@ -411,7 +411,7 @@ var geocoder = {
     var latitudeIndex = GEONAMES_COLUMNS.indexOf('latitude');
     var longitudeIndex = GEONAMES_COLUMNS.indexOf('longitude');
 
-    lazy.readFile(pathToCsv).lines().each(function(line) {
+    lazy.readFile(pathToCsv).split('\n').each(function(line) {
       var lineObj = {};
       line = line.split('\t');
       for (var i = 0; i < lenI; i++) {
@@ -523,7 +523,7 @@ var geocoder = {
     var counter = 0;
     that._admin3Codes = {};
     that._admin4Codes = {};
-    lazy.readFile(pathToCsv).lines().each(function(line) {
+    lazy.readFile(pathToCsv).split('\n').each(function(line) {
       line = line.split('\t');
       var featureCode = line[featureCodeIndex];
       if ((featureCode === 'ADM3') || (featureCode === 'ADM4')) {

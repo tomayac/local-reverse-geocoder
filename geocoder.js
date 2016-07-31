@@ -29,15 +29,15 @@
 
 'use strict';
 
-var DEBUG = false;
+var DEBUG = true;
 
 var fs = require('fs');
 var path = require('path');
 var kdTree = require('kdt');
 var request = require('request');
 var unzip = require('unzip2');
-var lazy = require('lazy.js');
 var async = require('async');
+var readline = require('readline');
 
 // All data from http://download.geonames.org/export/dump/
 var GEONAMES_URL = 'http://download.geonames.org/export/dump/';
@@ -196,7 +196,10 @@ var geocoder = {
   _parseGeoNamesAlternateNamesCsv: function(pathToCsv, callback) {
     var that = this;
     that._alternateNames = {};
-    lazy.readFile(pathToCsv).lines().each(function(line) {
+    var lineReader = readline.createInterface({
+      input: fs.createReadStream(pathToCsv)
+    });
+    lineReader.on('line', function(line) {
       line = line.split('\t');
       // Load postal codes
       if (line[2] === 'post') {
@@ -206,7 +209,8 @@ var geocoder = {
         // Key on second column which is the geoNameId
         that._alternateNames[line[1]][line[2]] = line[3];
       }
-    }).onComplete(function() {
+    });
+    lineReader.on('close', function() {
       return callback();
     });
   },
@@ -261,7 +265,10 @@ var geocoder = {
     var that = this;
     var lenI = GEONAMES_ADMIN_CODES_COLUMNS.length;
     that._admin1Codes = {};
-    lazy.readFile(pathToCsv).lines().each(function(line) {
+    var lineReader = readline.createInterface({
+      input: fs.createReadStream(pathToCsv)
+    });
+    lineReader.on('line', function(line) {
       line = line.split('\t');
       for (var i = 0; i < lenI; i++) {
         var value = line[i] || null;
@@ -271,7 +278,8 @@ var geocoder = {
           that._admin1Codes[line[0]][GEONAMES_ADMIN_CODES_COLUMNS[i]] = value;
         }
       }
-    }).onComplete(function() {
+    });
+    lineReader.on('close', function() {
       return callback();
     });
   },
@@ -326,7 +334,10 @@ var geocoder = {
     var that = this;
     var lenI = GEONAMES_ADMIN_CODES_COLUMNS.length;
     that._admin2Codes = {};
-    lazy.readFile(pathToCsv).lines().each(function(line) {
+    var lineReader = readline.createInterface({
+      input: fs.createReadStream(pathToCsv)
+    });
+    lineReader.on('line', function(line) {
       line = line.split('\t');
       for (var i = 0; i < lenI; i++) {
         var value = line[i] || null;
@@ -336,7 +347,8 @@ var geocoder = {
           that._admin2Codes[line[0]][GEONAMES_ADMIN_CODES_COLUMNS[i]] = value;
         }
       }
-    }).onComplete(function() {
+    });
+    lineReader.on('close', function() {
       return callback();
     });
   },
@@ -411,7 +423,10 @@ var geocoder = {
     var latitudeIndex = GEONAMES_COLUMNS.indexOf('latitude');
     var longitudeIndex = GEONAMES_COLUMNS.indexOf('longitude');
 
-    lazy.readFile(pathToCsv).lines().each(function(line) {
+    var lineReader = readline.createInterface({
+      input: fs.createReadStream(pathToCsv)
+    });
+    lineReader.on('line', function(line) {
       var lineObj = {};
       line = line.split('\t');
       for (var i = 0; i < lenI; i++) {
@@ -428,7 +443,8 @@ var geocoder = {
       } else {
         DEBUG && console.log('found null or undefined geo coords:', lineObj);
       }
-    }).onComplete(function() {
+    });
+    lineReader.on('close', function() {
       DEBUG && console.log('Finished parsing cities.txt');
       DEBUG && console.log('Started building cities k-d tree (this may take ' +
           'a while)');
@@ -523,7 +539,10 @@ var geocoder = {
     var counter = 0;
     that._admin3Codes = {};
     that._admin4Codes = {};
-    lazy.readFile(pathToCsv).lines().each(function(line) {
+    var lineReader = readline.createInterface({
+      input: fs.createReadStream(pathToCsv)
+    });
+    lineReader.on('line', function(line) {
       line = line.split('\t');
       var featureCode = line[featureCodeIndex];
       if ((featureCode === 'ADM3') || (featureCode === 'ADM4')) {
@@ -544,7 +563,8 @@ var geocoder = {
         DEBUG && console.log('Parsing progress all countries ' + counter);
       }
       counter++;
-    }).onComplete(function() {
+    });
+    lineReader.on('close', function() {
       DEBUG && console.log('Finished parsing all countries.txt');
       return callback();
     });
@@ -685,6 +705,8 @@ var geocoder = {
         latitude: parseFloat(point.latitude),
         longitude: parseFloat(point.longitude)
       };
+      DEBUG && console.log('Look-up request for point ' +
+          JSON.stringify(point));
       functions[i] = function(innerCallback) {
         var result = that._kdTree.nearest(point, maxResults);
         result.reverse();
@@ -738,13 +760,19 @@ var geocoder = {
             result[j] = result[j][0];
           }
         }
+        DEBUG && console.log('Found result(s) for point ' +
+            JSON.stringify(point) + result.map(function(subResult, i) {
+              return '\n  (' + (++i) + ') {"geoNameId":"' +
+                  subResult.geoNameId + '",' + '"name":"' + subResult.name +
+                  '"}';
+            }));
         return innerCallback(null, result);
       };
     });
     async.series(
       functions,
     function(err, results) {
-      DEBUG && console.log('Delivering results');
+      DEBUG && console.log('Delivering joint results');
       return callback(null, results);
     });
   }

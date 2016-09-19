@@ -104,6 +104,8 @@ $ curl "http://localhost:3000/geocode?latitude=48.466667&longitude=9.133333&lati
 
 An output array that maps each point in the input array (or input object converted to a single-element array) to the `maxResults` closest addresses.
 
+The measurement units are used [as defined by GenoNames](http://www.geonames.org/export/web-services.html), for example, ```elevation``` is measured in meters. The ```distance``` value is dynamically calculated based on the [haversine distance](http://www.movable-type.co.uk/scripts/latlong.html) for the input point(s) to each of the particular results points and is measured in kilometers.
+
 ```javascript
 [
   [{

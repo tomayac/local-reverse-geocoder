@@ -423,14 +423,13 @@ var geocoder = {
     var that = this;
     var content = fs.readFileSync(pathToCsv);
     parse(content, {delimiter: "\t", quote: ""}, function(err, lines) {
-      if(err) console.log(err);
+      if (err) return callback(err);
       lines.forEach(function(line) {
         var lineObj = {};
         for (var i = 0; i < lenI; i++) {
           var column = line[i] || null;
           lineObj[GEONAMES_COLUMNS[i]] = column;
         }
-        if(parseFloat(lineObj.name)) console.log(line);
         data.push(lineObj);
       });
 

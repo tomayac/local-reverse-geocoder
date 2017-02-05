@@ -33,6 +33,7 @@ var DEBUG = true;
 
 var fs = require('fs');
 var path = require('path');
+var parse = require('csv-parse');
 var kdTree = require('kdt');
 var request = require('request');
 var unzip = require('unzip2');
@@ -416,38 +417,25 @@ var geocoder = {
 
   _parseGeoNamesCitiesCsv: function(pathToCsv, callback) {
     DEBUG && console.log('Started parsing cities.txt (this  may take a ' +
-        'while)');
+      'while)');
     var data = [];
     var lenI = GEONAMES_COLUMNS.length;
     var that = this;
-    var latitudeIndex = GEONAMES_COLUMNS.indexOf('latitude');
-    var longitudeIndex = GEONAMES_COLUMNS.indexOf('longitude');
-
-    var lineReader = readline.createInterface({
-      input: fs.createReadStream(pathToCsv)
-    });
-    lineReader.on('line', function(line) {
-      var lineObj = {};
-      line = line.split('\t');
-      for (var i = 0; i < lenI; i++) {
-        var column = line[i] || null;
-        lineObj[GEONAMES_COLUMNS[i]] = column;
-      }
-
-      var lng = lineObj[GEONAMES_COLUMNS[latitudeIndex]];
-      var lat = lineObj[GEONAMES_COLUMNS[longitudeIndex]];
-      //dont add lineObj without lat/lng pair
-      if (lng !== null && lng !== undefined && !isNaN(lng) &&
-          lat !== null && lat !== undefined && !isNaN(lat)) {
+    var content = fs.readFileSync(pathToCsv);
+    parse(content, {delimiter: "\t", quote: ""}, function(err, lines) {
+      if (err) return callback(err);
+      lines.forEach(function(line) {
+        var lineObj = {};
+        for (var i = 0; i < lenI; i++) {
+          var column = line[i] || null;
+          lineObj[GEONAMES_COLUMNS[i]] = column;
+        }
         data.push(lineObj);
-      } else {
-        DEBUG && console.log('found null or undefined geo coords:', lineObj);
-      }
-    });
-    lineReader.on('close', function() {
+      });
+
       DEBUG && console.log('Finished parsing cities.txt');
       DEBUG && console.log('Started building cities k-d tree (this may take ' +
-          'a while)');
+        'a while)');
       var dimensions = [
         'latitude',
         'longitude'

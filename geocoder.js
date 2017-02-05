@@ -422,8 +422,10 @@ var geocoder = {
     var lenI = GEONAMES_COLUMNS.length;
     var that = this;
     var content = fs.readFileSync(pathToCsv);
-    parse(content, {delimiter: "\t", quote: ""}, function(err, lines) {
-      if (err) return callback(err);
+    parse(content, {delimiter: '\t', quote: ''}, function(err, lines) {
+      if (err) {
+        return callback(err);
+      }
       lines.forEach(function(line) {
         var lineObj = {};
         for (var i = 0; i < lenI; i++) {

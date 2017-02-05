@@ -1,10 +1,12 @@
 {
   "name": "local-reverse-geocoder",
-  "version": "0.2.2",
+  "version": "0.3.0",
   "description": "Implements a local reverse geocoder based on GeoNames",
   "main": "geocoder.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "lint": "jshint --exclude ./node_modules,./docs/scripts .",
+    "start": "node app.js",
+    "build": "jsdoc -d docs geocoder.js"
   },
   "keywords": [
     "geocoding",
@@ -22,10 +24,6 @@
     "request": "^2.75.0",
     "unzip2": "^0.2.5"
   },
-  "directories": {
-    "doc": "docs"
-  },
-  "devDependencies": {},
   "repository": {
     "type": "git",
     "url": "https://github.com/tomayac/local-reverse-geocoder.git"

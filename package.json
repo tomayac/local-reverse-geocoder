@@ -17,11 +17,11 @@
   "author": "Thomas Steiner",
   "license": "Apache-2.0",
   "dependencies": {
-    "async": "^2.0.1",
-    "csv-parse": "^1.1.7",
-    "express": "^4.10.2",
+    "async": "^2.5.0",
+    "csv-parse": "^1.2.0",
+    "express": "^4.15.3",
     "kdt": "^0.1.0",
-    "request": "^2.75.0",
+    "request": "^2.81.0",
     "unzip2": "^0.2.5"
   },
   "repository": {
@@ -31,5 +31,9 @@
   "bugs": {
     "url": "https://github.com/tomayac/local-reverse-geocoder/issues"
   },
-  "homepage": "https://github.com/tomayac/local-reverse-geocoder"
+  "homepage": "https://github.com/tomayac/local-reverse-geocoder",
+  "engines": {
+    "node": "4.8.x",
+    "npm": "2.15.x"
+  }
 }

@@ -1,6 +1,6 @@
 {
   "name": "local-reverse-geocoder",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "Implements a local reverse geocoder based on GeoNames",
   "main": "geocoder.js",
   "scripts": {
@@ -33,7 +33,7 @@
   },
   "homepage": "https://github.com/tomayac/local-reverse-geocoder",
   "engines": {
-    "node": "4.8.x",
-    "npm": "2.15.x"
+    "node": ">=4.8.x",
+    "npm": ">=2.15.x"
   }
 }

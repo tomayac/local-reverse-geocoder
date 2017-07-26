@@ -274,6 +274,11 @@ You can override this behavior by removing the timestamp from the files in the `
 If you don't need admin1, admin2, admin3, admin4 or alternate names you can turn them
 off in a manual init call and decrease load time.
 
+# A Word on Memory Usage
+
+If you run into a ```FATAL ERROR: CALL_AND_RETRY_LAST Allocation failed - JavaScript heap out of memory``` issue,
+try running node with the [V8 option](https://github.com/nodejs/node/issues/7937) ```--max-old-space-size=2000```.
+
 # License
 Copyright 2017 Thomas Steiner (tomac@google.com)
 

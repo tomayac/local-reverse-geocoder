@@ -1,5 +1,7 @@
 # Local Reverse Geocoder
 
+[![Greenkeeper badge](https://badges.greenkeeper.io/tomayac/local-reverse-geocoder.svg)](https://greenkeeper.io/)
+
 This library provides a local reverse geocoder for Node.js that is based on
 [GeoNames](http://download.geonames.org/export/dump/) data. It is *local*
 in the sense that there are no calls to a remote service like the

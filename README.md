@@ -59,8 +59,8 @@ geocoder.lookUp(points, maxResults, function(err, res) {
 
 ## Init
 
-You can optionally initialize the geocoder prior to the first call to lookUp.  This ensures
-that all files are loaded into the cache prior to making the first call.
+You can optionally initialize the geocoder prior to the first call to lookUp.
+This ensures that all files are loaded into the cache prior to making the first call.
 
 ```javascript
 var geocoder = require('local-reverse-geocoder');
@@ -70,9 +70,9 @@ geocoder.init({}, function() {
 });
 ```
 
-Optionally ```init``` also allows you to specify which files to load data from.  This reduces
-initialization time and the runtime memory footprint of the nodejs process.  By default
-all files are loaded.
+Optionally ```init``` also allows you to specify which files to load data from.
+This reduces initialization time and the runtime memory footprint of the nodejs process.
+By default all files are loaded.
 
 ```javascript
 var geocoder = require('local-reverse-geocoder');
@@ -266,11 +266,14 @@ like Google's
 [reverse geocoding API](https://developers.google.com/maps/documentation/javascript/geocoding#ReverseGeocoding).
 (Full disclosure: the author is currently employed by Google.)
 
-# A Word on Speed
+# A Word on Initialization Speed
 
 The initial lookup takes quite a while, as the geocoder has to download roughly
 300MB of data that it then caches locally (unzipped, this occupies about 1.3GB
 of disk space). All follow-up requests are lightning fast.
+
+# A Word on Data Freshness
+
 By default, the local [GeoNames dump](http://download.geonames.org/export/dump/) data gets refreshed each day.
 You can override this behavior by removing the timestamp from the files in the `./geonames_dump` download folder.
 If you don't need admin1, admin2, admin3, admin4 or alternate names you can turn them

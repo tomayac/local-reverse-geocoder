@@ -1,6 +1,6 @@
 {
   "name": "local-reverse-geocoder",
-  "version": "0.3.2",
+  "version": "0.4.0",
   "description": "Implements a local reverse geocoder based on GeoNames",
   "main": "geocoder.js",
   "scripts": {
@@ -19,9 +19,9 @@
   "dependencies": {
     "async": "^2.5.0",
     "csv-parse": "^2.0.0",
-    "express": "^4.15.3",
+    "express": "^4.16.2",
     "kdt": "^0.1.0",
-    "request": "^2.81.0",
+    "request": "^2.83.0",
     "unzip2": "^0.2.5"
   },
   "repository": {

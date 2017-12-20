@@ -284,6 +284,10 @@ off in a manual init call and decrease load time.
 If you run into a ```FATAL ERROR: CALL_AND_RETRY_LAST Allocation failed - JavaScript heap out of memory``` issue,
 try running node with the [V8 option](https://github.com/nodejs/node/issues/7937) ```--max-old-space-size=2000```.
 
+# A Word on Debugging
+
+To turn on debug logging add a DEBUG=local-reverse-geocoder environment variable on the command line.
+
 # License
 Copyright 2017 Thomas Steiner (tomac@google.com)
 

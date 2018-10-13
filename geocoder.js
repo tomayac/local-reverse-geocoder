@@ -35,7 +35,7 @@ var path = require('path');
 var parse = require('csv-parse');
 var kdTree = require('kdt');
 var request = require('request');
-var unzip = require('unzip2');
+var unzip = require('node-unzip-2');
 var async = require('async');
 var readline = require('readline');
 

@@ -1,6 +1,6 @@
 {
   "name": "local-reverse-geocoder",
-  "version": "0.4.4",
+  "version": "0.4.5",
   "description": "Implements a local reverse geocoder based on GeoNames",
   "main": "geocoder.js",
   "scripts": {

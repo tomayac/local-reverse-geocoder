@@ -15,6 +15,17 @@ a latitude/longitude pair, and it returns the closest city to that point.
 $ npm install local-reverse-geocoder
 ```
 
+# Docker
+
+For usage with [Docker](https://www.docker.com/), a Dockerfile is available in this project. It caches all the required files from GeoNames.
+
+To use it:
+
+```bash
+$ docker build -t local-reverse-geocoder .
+$ docker run -it -e PORT=3000 --rm local-reverse-geocoder
+```
+
 # Usage in Node.js
 
 ## Look Up
@@ -100,17 +111,6 @@ You can use the built-in Web service by running `node app.js` as follows.
 
 ```bash
 $ curl "http://localhost:3000/geocode?latitude=48.466667&longitude=9.133333&latitude=42.083333&longitude=3.1&maxResults=2"
-```
-
-# Dockerfile
-
-For usage with [Docker](https://www.docker.com/), a Dockerfile is available in this project. It caches all the required files from GeoNames.
-
-To use it:
-
-```bash
-$ docker build -t local-reverse-geocoder .
-$ docker run -it -e PORT=3000 --rm local-reverse-geocoder
 ```
 
 # Result Format

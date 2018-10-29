@@ -324,5 +324,6 @@ that was ported to Node.js by [Luke Arduini](https://github.com/luk-/node-kdt).
 # Contributors
 - [Chris Kinsman](https://github.com/chriskinsman)
 - [@bloodfire91](https://github.com/bloodfire91)
+- [@yjwong](https://github.com/yjwong)
 
 [![NPM](https://nodei.co/npm/local-reverse-geocoder.png?downloads=true)](https://nodei.co/npm/local-reverse-geocoder/)

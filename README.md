@@ -322,7 +322,7 @@ It uses Ubilabs' [k-d-tree implementation](https://github.com/ubilabs/kd-tree-ja
 that was ported to Node.js by [Luke Arduini](https://github.com/luk-/node-kdt).
 
 # Contributors
-- [Chris Kinsman](https://github.com/chriskinsman)
+- [@chriskinsman](https://github.com/chriskinsman)
 - [@bloodfire91](https://github.com/bloodfire91)
 - [@yjwong](https://github.com/yjwong)
 

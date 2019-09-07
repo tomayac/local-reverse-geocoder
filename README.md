@@ -157,6 +157,15 @@ The measurement units are used [as defined by GenoNames](http://www.geonames.org
     "dem": "430",
     "timezone": "Europe/Berlin",
     "modificationDate": "2011-04-25",
+    "alternateName": {
+      "de": {
+        "altName":"Gomaringen",
+        "isPreferredName": true,
+        "isShortName": false,
+        "isColloquial": false,
+        "isHistoric": false
+      }
+    },
     "distance": 3.1302317076079285
   }, {
     "geoNameId": "2814195",

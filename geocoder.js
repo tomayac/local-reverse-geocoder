@@ -201,14 +201,34 @@ var geocoder = {
     });
     lineReader.on('line', function(line) {
       line = line.split('\t');
-      // Load postal codes
-      if (line[2] === 'post') {
-        if (!that._alternateNames[line[1]]) {
-          that._alternateNames[line[1]] = {};
-        }
-        // Key on second column which is the geoNameId
-        that._alternateNames[line[1]][line[2]] = line[3];
+
+      const [
+        _,
+        geoNameId,
+        isoLanguage,
+        altName,
+        isPreferredName,
+        isShortName,
+        isColloquial,
+        isHistoric
+      ] = line;
+
+      if (isoLanguage === '') {
+        // consider data without country code as invalid
+        return;
       }
+
+      if (!that._alternateNames[geoNameId]) {
+        that._alternateNames[geoNameId] = {};
+      }
+
+      that._alternateNames[geoNameId][isoLanguage] = {
+        altName,
+        isPreferredName: Boolean(isPreferredName),
+        isShortName: Boolean(isShortName),
+        isColloquial: Boolean(isColloquial),
+        isHistoric: Boolean(isHistoric)
+      };
     });
     lineReader.on('close', function() {
       return callback();

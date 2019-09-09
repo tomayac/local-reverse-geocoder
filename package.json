@@ -36,5 +36,9 @@
   "engines": {
     "node": ">=4.8.x",
     "npm": ">=2.15.x"
+  },
+  "devDependencies": {
+    "jsdoc": "~3.6.3",
+    "jshint": "~2.10.2"
   }
 }

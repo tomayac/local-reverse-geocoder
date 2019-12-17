@@ -3,8 +3,25 @@
 var express = require('express');
 var app = express();
 var geocoder = require('./geocoder.js');
+var isGeocodeInitialized = false;
+
+app.get("/healthcheck", function(req, res) {
+  return res.status(200).send("OK");
+});
+
+app.get("/deep-healthcheck", function(req, res) {
+  if (isGeocodeInitialized) {
+    return res.status(200).send("OK");
+  } else {
+    return res.status(503).send("Not ready yet.");
+  }
+});
 
 app.get(/geocode/, function(req, res) {
+  if (!isGeocodeInitialized) {
+    return res.status(503).send("Not ready yet.");
+  }
+
   var lat = req.query.latitude || false;
   var lon = req.query.longitude || false;
   var maxResults = req.query.maxResults || 1;
@@ -30,9 +47,14 @@ app.get(/geocode/, function(req, res) {
   });
 });
 
-geocoder.init({}, function() {
-  var port = Number(process.env.PORT || 3000);
-  app.listen(port, function() {
-    console.log('Local reverse geocoder listening on port ' + port);
+
+
+var port = Number(process.env.PORT || 3000);
+app.listen(port, function() {
+  console.log('Local reverse geocoder listening on port ' + port);
+  console.log('Initializing Geocoder...');
+  geocoder.init({}, function() {
+    console.log("Geocoder initialized and ready.")
+    isGeocodeInitialized = true;
   });
 });

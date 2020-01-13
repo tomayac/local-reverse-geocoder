@@ -39,6 +39,6 @@
   },
   "devDependencies": {
     "jsdoc": "~3.6.3",
-    "jshint": "~2.10.2"
+    "jshint": "~2.11.0"
   }
 }

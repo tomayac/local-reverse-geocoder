@@ -5,21 +5,21 @@ var app = express();
 var geocoder = require('./geocoder.js');
 var isGeocodeInitialized = false;
 
-app.get("/healthcheck", function(req, res) {
-  return res.status(200).send("OK");
+app.get('/healthcheck', function(req, res) {
+  return res.status(200).send('OK');
 });
 
-app.get("/deep-healthcheck", function(req, res) {
+app.get('/deep-healthcheck', function(req, res) {
   if (isGeocodeInitialized) {
-    return res.status(200).send("OK");
+    return res.status(200).send('OK');
   } else {
-    return res.status(503).send("Not ready yet.");
+    return res.status(503).send('Not ready yet.');
   }
 });
 
 app.get(/geocode/, function(req, res) {
   if (!isGeocodeInitialized) {
-    return res.status(503).send("Not ready yet.");
+    return res.status(503).send('Not ready yet.');
   }
 
   var lat = req.query.latitude || false;
@@ -54,7 +54,7 @@ app.listen(port, function() {
   console.log('Local reverse geocoder listening on port ' + port);
   console.log('Initializing Geocoder...');
   geocoder.init({}, function() {
-    console.log("Geocoder initialized and ready.")
+    console.log('Geocoder initialized and ready.')
     isGeocodeInitialized = true;
   });
 });

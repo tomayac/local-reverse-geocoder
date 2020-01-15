@@ -5,7 +5,7 @@
   "main": "geocoder.js",
   "scripts": {
     "lint": "jshint --exclude ./node_modules,./docs/scripts .",
-    "start": "node app.js",
+    "start": "node --max-old-space-size=4096 app.js",
     "build": "jsdoc -d docs geocoder.js"
   },
   "keywords": [

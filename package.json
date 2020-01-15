@@ -17,13 +17,13 @@
   "author": "Thomas Steiner",
   "license": "Apache-2.0",
   "dependencies": {
-    "async": "^3.0.1",
-    "csv-parse": "^4.0.0",
-    "debug": "^4.0.1",
-    "express": "^4.16.3",
+    "async": "^3.1.0",
+    "csv-parse": "^4.8.5",
+    "debug": "^4.1.1",
+    "express": "^4.17.1",
     "kdt": "^0.1.0",
     "request": "^2.88.0",
-    "node-unzip-2": "^0.2.7"
+    "node-unzip-2": "^0.2.8"
   },
   "repository": {
     "type": "git",

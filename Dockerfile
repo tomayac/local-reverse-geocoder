@@ -23,6 +23,6 @@ RUN apk add --no-cache curl && \
     cd cities && unzip cities1000.zip && rm cities1000.zip && cd .. && \
     cd alternate_names && unzip alternateNames.zip && rm alternateNames.zip
 
+EXPOSE 3000
 ENTRYPOINT ["npm"]
 CMD ["start"]
-

@@ -532,7 +532,6 @@ var geocoder = {
   _parseGeoNamesAllCountriesCsv: function(pathToCsv, callback) {
     debug('Started parsing all countries.txt (this  may take ' +
         'a while)');
-    var lenI = GEONAMES_COLUMNS.length;
     var that = this;
     // Indexes
     var featureCodeIndex = GEONAMES_COLUMNS.indexOf('featureCode');
@@ -677,7 +676,9 @@ var geocoder = {
       if (err) {
         throw(err);
       }
-      return callback();
+      if (callback) {
+        return callback();
+      }
     });
   },
 

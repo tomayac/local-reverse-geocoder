@@ -37,12 +37,12 @@ export interface InitLoadOptions {
   admin2?: boolean;
   admin3And4?: boolean;
   alternateNames?: boolean;
-};
+}
 
 export interface InitOptions {
   dumpDirectory?: string;
   load?: InitLoadOptions;
-};
+}
 
 declare const _default: {
   init: (options?: InitOptions, callback?: () => void) => void;

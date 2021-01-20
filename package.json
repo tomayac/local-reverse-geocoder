@@ -1,13 +1,13 @@
 {
   "name": "local-reverse-geocoder",
-  "version": "0.8.0",
-  "description": "Implements a local reverse geocoder based on GeoNames",
+  "version": "0.9.0",
+  "description": "Implements a local reverse geocoder based on GeoNames.",
   "main": "index.js",
   "types": "index.d.ts",
   "scripts": {
     "lint": "jshint --exclude ./node_modules,./docs/scripts .",
     "start": "node --max-old-space-size=4096 app.js",
-    "build": "jsdoc -d docs geocoder.js",
+    "build": "jsdoc -d docs index.js",
     "prettier": "prettier --write *.{js,md,json}"
   },
   "keywords": [
@@ -18,7 +18,8 @@
   ],
   "files": [
     "app.js",
-    "geocoder.js"
+    "index.js",
+    "index.d.ts"
   ],
   "author": "Thomas Steiner",
   "license": "Apache-2.0",

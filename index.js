@@ -27,72 +27,72 @@
  * });
  */
 
-"use strict";
+'use strict';
 
-var debug = require("debug")("local-reverse-geocoder");
-var fs = require("fs");
-var path = require("path");
-var parse = require("csv-parse");
-var kdTree = require("kdt");
-var request = require("request");
-var unzip = require("node-unzip-2");
-var async = require("async");
-var readline = require("readline");
+var debug = require('debug')('local-reverse-geocoder');
+var fs = require('fs');
+var path = require('path');
+var parse = require('csv-parse');
+var kdTree = require('kdt');
+var request = require('request');
+var unzip = require('node-unzip-2');
+var async = require('async');
+var readline = require('readline');
 
 // All data from http://download.geonames.org/export/dump/
-var GEONAMES_URL = "http://download.geonames.org/export/dump/";
+var GEONAMES_URL = 'http://download.geonames.org/export/dump/';
 
-var CITIES_FILE = "cities1000";
-var ADMIN_1_CODES_FILE = "admin1CodesASCII";
-var ADMIN_2_CODES_FILE = "admin2Codes";
-var ALL_COUNTRIES_FILE = "allCountries";
-var ALTERNATE_NAMES_FILE = "alternateNames";
+var CITIES_FILE = 'cities1000';
+var ADMIN_1_CODES_FILE = 'admin1CodesASCII';
+var ADMIN_2_CODES_FILE = 'admin2Codes';
+var ALL_COUNTRIES_FILE = 'allCountries';
+var ALTERNATE_NAMES_FILE = 'alternateNames';
 
 /* jshint maxlen: false */
 var GEONAMES_COLUMNS = [
-  "geoNameId", // integer id of record in geonames database
-  "name", // name of geographical point (utf8) varchar(200)
-  "asciiName", // name of geographical point in plain ascii characters, varchar(200)
-  "alternateNames", // alternatenames, comma separated, ascii names automatically transliterated, convenience attribute from alternatename table, varchar(10000)
-  "latitude", // latitude in decimal degrees (wgs84)
-  "longitude", // longitude in decimal degrees (wgs84)
-  "featureClass", // see http://www.geonames.org/export/codes.html, char(1)
-  "featureCode", // see http://www.geonames.org/export/codes.html, varchar(10)
-  "countryCode", // ISO-3166 2-letter country code, 2 characters
-  "cc2", // alternate country codes, comma separated, ISO-3166 2-letter country code, 60 characters
-  "admin1Code", // fipscode (subject to change to iso code), see exceptions below, see file admin1Codes.txt for display names of this code; varchar(20)
-  "admin2Code", // code for the second administrative division, a county in the US, see file admin2Codes.txt; varchar(80)
-  "admin3Code", // code for third level administrative division, varchar(20)
-  "admin4Code", // code for fourth level administrative division, varchar(20)
-  "population", // bigint (8 byte int)
-  "elevation", // in meters, integer
-  "dem", // digital elevation model, srtm3 or gtopo30, average elevation 3''x3'' (ca 90mx90m) or 30''x30'' (ca 900mx900m) area in meters, integer. srtm processed by cgiar/ciat.
-  "timezone", // the timezone id (see file timeZone.txt) varchar(40)
-  "modificationDate", // date of last modification in yyyy-MM-dd format
+  'geoNameId', // integer id of record in geonames database
+  'name', // name of geographical point (utf8) varchar(200)
+  'asciiName', // name of geographical point in plain ascii characters, varchar(200)
+  'alternateNames', // alternatenames, comma separated, ascii names automatically transliterated, convenience attribute from alternatename table, varchar(10000)
+  'latitude', // latitude in decimal degrees (wgs84)
+  'longitude', // longitude in decimal degrees (wgs84)
+  'featureClass', // see http://www.geonames.org/export/codes.html, char(1)
+  'featureCode', // see http://www.geonames.org/export/codes.html, varchar(10)
+  'countryCode', // ISO-3166 2-letter country code, 2 characters
+  'cc2', // alternate country codes, comma separated, ISO-3166 2-letter country code, 60 characters
+  'admin1Code', // fipscode (subject to change to iso code), see exceptions below, see file admin1Codes.txt for display names of this code; varchar(20)
+  'admin2Code', // code for the second administrative division, a county in the US, see file admin2Codes.txt; varchar(80)
+  'admin3Code', // code for third level administrative division, varchar(20)
+  'admin4Code', // code for fourth level administrative division, varchar(20)
+  'population', // bigint (8 byte int)
+  'elevation', // in meters, integer
+  'dem', // digital elevation model, srtm3 or gtopo30, average elevation 3''x3'' (ca 90mx90m) or 30''x30'' (ca 900mx900m) area in meters, integer. srtm processed by cgiar/ciat.
+  'timezone', // the timezone id (see file timeZone.txt) varchar(40)
+  'modificationDate', // date of last modification in yyyy-MM-dd format
 ];
 /* jshint maxlen: 80 */
 
 var GEONAMES_ADMIN_CODES_COLUMNS = [
-  "concatenatedCodes",
-  "name",
-  "asciiName",
-  "geoNameId",
+  'concatenatedCodes',
+  'name',
+  'asciiName',
+  'geoNameId',
 ];
 
 /* jshint maxlen: false */
 var GEONAMES_ALTERNATE_NAMES_COLUMNS = [
-  "alternateNameId", // the id of this alternate name, int
-  "geoNameId", // geonameId referring to id in table 'geoname', int
-  "isoLanguage", // iso 639 language code 2- or 3-characters; 4-characters 'post' for postal codes and 'iata','icao' and faac for airport codes, fr_1793 for French Revolution name
-  "alternateNames", // alternate name or name variant, varchar(200)
-  "isPreferrredName", // '1', if this alternate name is an official/preferred name
-  "isShortName", // '1', if this is a short name like 'California' for 'State of California'
-  "isColloquial", // '1', if this alternate name is a colloquial or slang term
-  "isHistoric", // '1', if this alternate name is historic and was used in the past
+  'alternateNameId', // the id of this alternate name, int
+  'geoNameId', // geonameId referring to id in table 'geoname', int
+  'isoLanguage', // iso 639 language code 2- or 3-characters; 4-characters 'post' for postal codes and 'iata','icao' and faac for airport codes, fr_1793 for French Revolution name
+  'alternateNames', // alternate name or name variant, varchar(200)
+  'isPreferrredName', // '1', if this alternate name is an official/preferred name
+  'isShortName', // '1', if this is a short name like 'California' for 'State of California'
+  'isColloquial', // '1', if this alternate name is a colloquial or slang term
+  'isHistoric', // '1', if this alternate name is historic and was used in the past
 ];
 /* jshint maxlen: 80 */
 
-var GEONAMES_DUMP = __dirname + "/geonames_dump";
+var GEONAMES_DUMP = __dirname + '/geonames_dump';
 
 var geocoder = {
   _kdTree: null,
@@ -131,85 +131,85 @@ var geocoder = {
     // Use timestamped alternate names file OR bare alternate names file
     var timestampedFilename =
       GEONAMES_DUMP +
-      "/alternate_names/" +
+      '/alternate_names/' +
       ALTERNATE_NAMES_FILE +
-      "_" +
+      '_' +
       now +
-      ".txt";
+      '.txt';
     if (fs.existsSync(timestampedFilename)) {
       debug(
-        "Using cached GeoNames alternate names data from " + timestampedFilename
+        'Using cached GeoNames alternate names data from ' + timestampedFilename
       );
       return callback(null, timestampedFilename);
     }
 
     var filename =
-      GEONAMES_DUMP + "/alternate_names/" + ALTERNATE_NAMES_FILE + ".txt";
+      GEONAMES_DUMP + '/alternate_names/' + ALTERNATE_NAMES_FILE + '.txt';
     if (fs.existsSync(filename)) {
-      debug("Using cached GeoNames alternate names data from " + filename);
+      debug('Using cached GeoNames alternate names data from ' + filename);
       return callback(null, filename);
     }
 
     debug(
-      "Getting GeoNames alternate names data from " +
+      'Getting GeoNames alternate names data from ' +
         GEONAMES_URL +
         ALTERNATE_NAMES_FILE +
-        ".zip (this may take a while)"
+        '.zip (this may take a while)'
     );
     var options = {
-      url: GEONAMES_URL + ALTERNATE_NAMES_FILE + ".zip",
+      url: GEONAMES_URL + ALTERNATE_NAMES_FILE + '.zip',
       encoding: null,
     };
     request.get(options, function (err, response, body) {
       if (err || response.statusCode !== 200) {
         return callback(
-          "Error downloading GeoNames alternate names data" +
-            (err ? ": " + err : "")
+          'Error downloading GeoNames alternate names data' +
+            (err ? ': ' + err : '')
         );
       }
-      debug("Received zipped GeoNames alternate names data");
+      debug('Received zipped GeoNames alternate names data');
       // Store a dump locally
-      if (!fs.existsSync(GEONAMES_DUMP + "/alternate_names")) {
-        fs.mkdirSync(GEONAMES_DUMP + "/alternate_names");
+      if (!fs.existsSync(GEONAMES_DUMP + '/alternate_names')) {
+        fs.mkdirSync(GEONAMES_DUMP + '/alternate_names');
       }
       var zipFilename =
         GEONAMES_DUMP +
-        "/alternate_names/" +
+        '/alternate_names/' +
         ALTERNATE_NAMES_FILE +
-        "_" +
+        '_' +
         now +
-        ".zip";
+        '.zip';
       try {
         fs.writeFileSync(zipFilename, body);
         fs.createReadStream(zipFilename)
-          .pipe(unzip.Extract({ path: GEONAMES_DUMP + "/alternate_names" }))
-          .on("error", function (e) {
+          .pipe(unzip.Extract({ path: GEONAMES_DUMP + '/alternate_names' }))
+          .on('error', function (e) {
             console.error(e);
           })
-          .on("close", function () {
+          .on('close', function () {
             fs.renameSync(filename, timestampedFilename);
             fs.unlinkSync(
               GEONAMES_DUMP +
-                "/alternate_names/" +
+                '/alternate_names/' +
                 ALTERNATE_NAMES_FILE +
-                "_" +
+                '_' +
                 now +
-                ".zip"
+                '.zip'
             );
-            debug("Unzipped GeoNames alternate names data");
+            debug('Unzipped GeoNames alternate names data');
             // Housekeeping, remove old files
             var currentFileName = path.basename(timestampedFilename);
-            fs.readdirSync(GEONAMES_DUMP + "/alternate_names").forEach(
+            fs.readdirSync(GEONAMES_DUMP + '/alternate_names').forEach(
               function (file) {
                 if (file !== currentFileName) {
-                  fs.unlinkSync(GEONAMES_DUMP + "/alternate_names/" + file);
+                  fs.unlinkSync(GEONAMES_DUMP + '/alternate_names/' + file);
                 }
               }
             );
             return callback(null, timestampedFilename);
           });
       } catch (e) {
-        debug("Warning: " + e);
+        debug('Warning: ' + e);
         return callback(null, timestampedFilename);
       }
     });
@@ -221,8 +221,8 @@ var geocoder = {
     var lineReader = readline.createInterface({
       input: fs.createReadStream(pathToCsv),
     });
-    lineReader.on("line", function (line) {
-      line = line.split("\t");
+    lineReader.on('line', function (line) {
+      line = line.split('\t');
 
       const [
         _,
@@ -235,7 +235,7 @@ var geocoder = {
         isHistoric,
       ] = line;
 
-      if (isoLanguage === "") {
+      if (isoLanguage === '') {
         // consider data without country code as invalid
         return;
       }
@@ -252,7 +252,7 @@ var geocoder = {
         isHistoric: Boolean(isHistoric),
       };
     });
-    lineReader.on("close", function () {
+    lineReader.on('close', function () {
       return callback();
     });
   },
@@ -261,52 +261,52 @@ var geocoder = {
     var now = new Date().toISOString().substr(0, 10);
     var timestampedFilename =
       GEONAMES_DUMP +
-      "/admin1_codes/" +
+      '/admin1_codes/' +
       ADMIN_1_CODES_FILE +
-      "_" +
+      '_' +
       now +
-      ".txt";
+      '.txt';
     if (fs.existsSync(timestampedFilename)) {
       debug(
-        "Using cached GeoNames admin 1 codes data from " + timestampedFilename
+        'Using cached GeoNames admin 1 codes data from ' + timestampedFilename
       );
       return callback(null, timestampedFilename);
     }
 
     var filename =
-      GEONAMES_DUMP + "/admin1_codes/" + ADMIN_1_CODES_FILE + ".txt";
+      GEONAMES_DUMP + '/admin1_codes/' + ADMIN_1_CODES_FILE + '.txt';
     if (fs.existsSync(filename)) {
-      debug("Using cached GeoNames admin 1 codes data from " + filename);
+      debug('Using cached GeoNames admin 1 codes data from ' + filename);
       return callback(null, filename);
     }
 
     debug(
-      "Getting GeoNames admin 1 codes data from " +
+      'Getting GeoNames admin 1 codes data from ' +
         GEONAMES_URL +
         ADMIN_1_CODES_FILE +
-        ".txt (this may take a while)"
+        '.txt (this may take a while)'
     );
-    var url = GEONAMES_URL + ADMIN_1_CODES_FILE + ".txt";
+    var url = GEONAMES_URL + ADMIN_1_CODES_FILE + '.txt';
     request.get(url, function (err, response, body) {
       if (err || response.statusCode !== 200) {
         return callback(
-          "Error downloading GeoNames admin 1 codes data" +
-            (err ? ": " + err : "")
+          'Error downloading GeoNames admin 1 codes data' +
+            (err ? ': ' + err : '')
         );
       }
       // Store a dump locally
-      if (!fs.existsSync(GEONAMES_DUMP + "/admin1_codes")) {
-        fs.mkdirSync(GEONAMES_DUMP + "/admin1_codes");
+      if (!fs.existsSync(GEONAMES_DUMP + '/admin1_codes')) {
+        fs.mkdirSync(GEONAMES_DUMP + '/admin1_codes');
       }
       try {
         fs.writeFileSync(timestampedFilename, body);
         // Housekeeping, remove old files
         var currentFileName = path.basename(timestampedFilename);
-        fs.readdirSync(GEONAMES_DUMP + "/admin1_codes").forEach(function (
+        fs.readdirSync(GEONAMES_DUMP + '/admin1_codes').forEach(function (
           file
         ) {
           if (file !== currentFileName) {
-            fs.unlinkSync(GEONAMES_DUMP + "/admin1_codes/" + file);
+            fs.unlinkSync(GEONAMES_DUMP + '/admin1_codes/' + file);
           }
         });
       } catch (e) {
@@ -323,8 +323,8 @@ var geocoder = {
     var lineReader = readline.createInterface({
       input: fs.createReadStream(pathToCsv),
     });
-    lineReader.on("line", function (line) {
-      line = line.split("\t");
+    lineReader.on('line', function (line) {
+      line = line.split('\t');
       for (var i = 0; i < lenI; i++) {
         var value = line[i] || null;
         if (i === 0) {
@@ -334,7 +334,7 @@ var geocoder = {
         }
       }
     });
-    lineReader.on("close", function () {
+    lineReader.on('close', function () {
       return callback();
     });
   },
@@ -343,52 +343,52 @@ var geocoder = {
     var now = new Date().toISOString().substr(0, 10);
     var timestampedFilename =
       GEONAMES_DUMP +
-      "/admin2_codes/" +
+      '/admin2_codes/' +
       ADMIN_2_CODES_FILE +
-      "_" +
+      '_' +
       now +
-      ".txt";
+      '.txt';
     if (fs.existsSync(timestampedFilename)) {
       debug(
-        "Using cached GeoNames admin 2 codes data from " + timestampedFilename
+        'Using cached GeoNames admin 2 codes data from ' + timestampedFilename
       );
       return callback(null, timestampedFilename);
     }
 
     var filename =
-      GEONAMES_DUMP + "/admin2_codes/" + ADMIN_2_CODES_FILE + ".txt";
+      GEONAMES_DUMP + '/admin2_codes/' + ADMIN_2_CODES_FILE + '.txt';
     if (fs.existsSync(filename)) {
-      debug("Using cached GeoNames admin 2 codes data from " + filename);
+      debug('Using cached GeoNames admin 2 codes data from ' + filename);
       return callback(null, filename);
     }
 
     debug(
-      "Getting GeoNames admin 2 codes data from " +
+      'Getting GeoNames admin 2 codes data from ' +
         GEONAMES_URL +
         ADMIN_2_CODES_FILE +
-        ".txt (this may take a while)"
+        '.txt (this may take a while)'
     );
-    var url = GEONAMES_URL + ADMIN_2_CODES_FILE + ".txt";
+    var url = GEONAMES_URL + ADMIN_2_CODES_FILE + '.txt';
     request.get(url, function (err, response, body) {
       if (err || response.statusCode !== 200) {
         return callback(
-          "Error downloading GeoNames admin 2 codes data" +
-            (err ? ": " + err : "")
+          'Error downloading GeoNames admin 2 codes data' +
+            (err ? ': ' + err : '')
         );
       }
       // Store a dump locally
-      if (!fs.existsSync(GEONAMES_DUMP + "/admin2_codes")) {
-        fs.mkdirSync(GEONAMES_DUMP + "/admin2_codes");
+      if (!fs.existsSync(GEONAMES_DUMP + '/admin2_codes')) {
+        fs.mkdirSync(GEONAMES_DUMP + '/admin2_codes');
       }
       try {
         fs.writeFileSync(timestampedFilename, body);
         // Housekeeping, remove old files
         var currentFileName = path.basename(timestampedFilename);
-        fs.readdirSync(GEONAMES_DUMP + "/admin2_codes").forEach(function (
+        fs.readdirSync(GEONAMES_DUMP + '/admin2_codes').forEach(function (
           file
         ) {
           if (file !== currentFileName) {
-            fs.unlinkSync(GEONAMES_DUMP + "/admin2_codes/" + file);
+            fs.unlinkSync(GEONAMES_DUMP + '/admin2_codes/' + file);
           }
         });
       } catch (e) {
@@ -405,8 +405,8 @@ var geocoder = {
     var lineReader = readline.createInterface({
       input: fs.createReadStream(pathToCsv),
     });
-    lineReader.on("line", function (line) {
-      line = line.split("\t");
+    lineReader.on('line', function (line) {
+      line = line.split('\t');
       for (var i = 0; i < lenI; i++) {
         var value = line[i] || null;
         if (i === 0) {
@@ -416,7 +416,7 @@ var geocoder = {
         }
       }
     });
-    lineReader.on("close", function () {
+    lineReader.on('close', function () {
       return callback();
     });
   },
@@ -425,74 +425,74 @@ var geocoder = {
     var now = new Date().toISOString().substr(0, 10);
     // Use timestamped cities file OR bare cities file
     var timestampedFilename =
-      GEONAMES_DUMP + "/cities/" + CITIES_FILE + "_" + now + ".txt";
+      GEONAMES_DUMP + '/cities/' + CITIES_FILE + '_' + now + '.txt';
     if (fs.existsSync(timestampedFilename)) {
-      debug("Using cached GeoNames cities data from " + timestampedFilename);
+      debug('Using cached GeoNames cities data from ' + timestampedFilename);
       return callback(null, timestampedFilename);
     }
 
-    var filename = GEONAMES_DUMP + "/cities/" + CITIES_FILE + ".txt";
+    var filename = GEONAMES_DUMP + '/cities/' + CITIES_FILE + '.txt';
     if (fs.existsSync(filename)) {
-      debug("Using cached GeoNames cities data from " + filename);
+      debug('Using cached GeoNames cities data from ' + filename);
       return callback(null, filename);
     }
 
     debug(
-      "Getting GeoNames cities data from " +
+      'Getting GeoNames cities data from ' +
         GEONAMES_URL +
         CITIES_FILE +
-        ".zip (this may take a while)"
+        '.zip (this may take a while)'
     );
     var options = {
-      url: GEONAMES_URL + CITIES_FILE + ".zip",
+      url: GEONAMES_URL + CITIES_FILE + '.zip',
       encoding: null,
     };
     request.get(options, function (err, response, body) {
       if (err || response.statusCode !== 200) {
         return callback(
-          "Error downloading GeoNames cities data" + (err ? ": " + err : "")
+          'Error downloading GeoNames cities data' + (err ? ': ' + err : '')
         );
       }
-      debug("Received zipped GeoNames cities data");
+      debug('Received zipped GeoNames cities data');
       // Store a dump locally
-      if (!fs.existsSync(GEONAMES_DUMP + "/cities")) {
-        fs.mkdirSync(GEONAMES_DUMP + "/cities");
+      if (!fs.existsSync(GEONAMES_DUMP + '/cities')) {
+        fs.mkdirSync(GEONAMES_DUMP + '/cities');
       }
       var zipFilename =
-        GEONAMES_DUMP + "/cities/" + CITIES_FILE + "_" + now + ".zip";
+        GEONAMES_DUMP + '/cities/' + CITIES_FILE + '_' + now + '.zip';
       try {
         fs.writeFileSync(zipFilename, body);
         fs.createReadStream(zipFilename)
-          .pipe(unzip.Extract({ path: GEONAMES_DUMP + "/cities" }))
-          .on("close", function () {
+          .pipe(unzip.Extract({ path: GEONAMES_DUMP + '/cities' }))
+          .on('close', function () {
             fs.renameSync(filename, timestampedFilename);
             fs.unlinkSync(
-              GEONAMES_DUMP + "/cities/" + CITIES_FILE + "_" + now + ".zip"
+              GEONAMES_DUMP + '/cities/' + CITIES_FILE + '_' + now + '.zip'
             );
-            debug("Unzipped GeoNames cities data");
+            debug('Unzipped GeoNames cities data');
             // Housekeeping, remove old files
             var currentFileName = path.basename(timestampedFilename);
-            fs.readdirSync(GEONAMES_DUMP + "/cities").forEach(function (file) {
+            fs.readdirSync(GEONAMES_DUMP + '/cities').forEach(function (file) {
               if (file !== currentFileName) {
-                fs.unlinkSync(GEONAMES_DUMP + "/cities/" + file);
+                fs.unlinkSync(GEONAMES_DUMP + '/cities/' + file);
               }
             });
             return callback(null, timestampedFilename);
           });
       } catch (e) {
-        debug("Warning: " + e);
+        debug('Warning: ' + e);
         return callback(null, timestampedFilename);
       }
     });
   },
 
   _parseGeoNamesCitiesCsv: function (pathToCsv, callback) {
-    debug("Started parsing cities.txt (this  may take a " + "while)");
+    debug('Started parsing cities.txt (this  may take a ' + 'while)');
     var data = [];
     var lenI = GEONAMES_COLUMNS.length;
     var that = this;
     var content = fs.readFileSync(pathToCsv);
-    parse(content, { delimiter: "\t", quote: "" }, function (err, lines) {
+    parse(content, { delimiter: '\t', quote: '' }, function (err, lines) {
       if (err) {
         return callback(err);
       }
@@ -505,11 +505,11 @@ var geocoder = {
         data.push(lineObj);
       });
 
-      debug("Finished parsing cities.txt");
-      debug("Started building cities k-d tree (this may take " + "a while)");
-      var dimensions = ["latitude", "longitude"];
+      debug('Finished parsing cities.txt');
+      debug('Started building cities k-d tree (this may take ' + 'a while)');
+      var dimensions = ['latitude', 'longitude'];
       that._kdTree = kdTree.createKdTree(data, that._distanceFunc, dimensions);
-      debug("Finished building cities k-d tree");
+      debug('Finished building cities k-d tree');
       return callback();
     });
   },
@@ -518,99 +518,99 @@ var geocoder = {
     var now = new Date().toISOString().substr(0, 10);
     var timestampedFilename =
       GEONAMES_DUMP +
-      "/all_countries/" +
+      '/all_countries/' +
       ALL_COUNTRIES_FILE +
-      "_" +
+      '_' +
       now +
-      ".txt";
+      '.txt';
     if (fs.existsSync(timestampedFilename)) {
       debug(
-        "Using cached GeoNames all countries data from " + timestampedFilename
+        'Using cached GeoNames all countries data from ' + timestampedFilename
       );
       return callback(null, timestampedFilename);
     }
 
     var filename =
-      GEONAMES_DUMP + "/all_countries/" + ALL_COUNTRIES_FILE + ".txt";
+      GEONAMES_DUMP + '/all_countries/' + ALL_COUNTRIES_FILE + '.txt';
     if (fs.existsSync(filename)) {
-      debug("Using cached GeoNames all countries data from " + filename);
+      debug('Using cached GeoNames all countries data from ' + filename);
       return callback(null, filename);
     }
 
     debug(
-      "Getting GeoNames all countries data from " +
+      'Getting GeoNames all countries data from ' +
         GEONAMES_URL +
         ALL_COUNTRIES_FILE +
-        ".zip (this may take a while)"
+        '.zip (this may take a while)'
     );
     var options = {
-      url: GEONAMES_URL + ALL_COUNTRIES_FILE + ".zip",
+      url: GEONAMES_URL + ALL_COUNTRIES_FILE + '.zip',
       encoding: null,
     };
     request.get(options, function (err, response, body) {
       if (err || response.statusCode !== 200) {
         return callback(
-          "Error downloading GeoNames all countries data" +
-            (err ? ": " + err : "")
+          'Error downloading GeoNames all countries data' +
+            (err ? ': ' + err : '')
         );
       }
-      debug("Received zipped GeoNames all countries data");
+      debug('Received zipped GeoNames all countries data');
       // Store a dump locally
-      if (!fs.existsSync(GEONAMES_DUMP + "/all_countries")) {
-        fs.mkdirSync(GEONAMES_DUMP + "/all_countries");
+      if (!fs.existsSync(GEONAMES_DUMP + '/all_countries')) {
+        fs.mkdirSync(GEONAMES_DUMP + '/all_countries');
       }
       var zipFilename =
         GEONAMES_DUMP +
-        "/all_countries/" +
+        '/all_countries/' +
         ALL_COUNTRIES_FILE +
-        "_" +
+        '_' +
         now +
-        ".zip";
+        '.zip';
       try {
         fs.writeFileSync(zipFilename, body);
         fs.createReadStream(zipFilename)
-          .pipe(unzip.Extract({ path: GEONAMES_DUMP + "/all_countries" }))
-          .on("close", function () {
+          .pipe(unzip.Extract({ path: GEONAMES_DUMP + '/all_countries' }))
+          .on('close', function () {
             fs.renameSync(filename, timestampedFilename);
             fs.unlinkSync(
               GEONAMES_DUMP +
-                "/all_countries/" +
+                '/all_countries/' +
                 ALL_COUNTRIES_FILE +
-                "_" +
+                '_' +
                 now +
-                ".zip"
+                '.zip'
             );
-            debug("Unzipped GeoNames all countries data");
+            debug('Unzipped GeoNames all countries data');
             // Housekeeping, remove old files
             var currentFileName = path.basename(timestampedFilename);
-            var directory = GEONAMES_DUMP + "/all_countries";
+            var directory = GEONAMES_DUMP + '/all_countries';
             fs.readdirSync(directory).forEach(function (file) {
               if (file !== currentFileName) {
-                fs.unlinkSync(GEONAMES_DUMP + "/all_countries/" + file);
+                fs.unlinkSync(GEONAMES_DUMP + '/all_countries/' + file);
               }
             });
             return callback(null, timestampedFilename);
           });
       } catch (e) {
-        debug("Warning: " + e);
+        debug('Warning: ' + e);
         return callback(null, timestampedFilename);
       }
     });
   },
 
   _parseGeoNamesAllCountriesCsv: function (pathToCsv, callback) {
-    debug("Started parsing all countries.txt (this  may take " + "a while)");
+    debug('Started parsing all countries.txt (this  may take ' + 'a while)');
     var that = this;
     // Indexes
-    var featureCodeIndex = GEONAMES_COLUMNS.indexOf("featureCode");
-    var countryCodeIndex = GEONAMES_COLUMNS.indexOf("countryCode");
-    var admin1CodeIndex = GEONAMES_COLUMNS.indexOf("admin1Code");
-    var admin2CodeIndex = GEONAMES_COLUMNS.indexOf("admin2Code");
-    var admin3CodeIndex = GEONAMES_COLUMNS.indexOf("admin3Code");
-    var admin4CodeIndex = GEONAMES_COLUMNS.indexOf("admin4Code");
-    var nameIndex = GEONAMES_COLUMNS.indexOf("name");
-    var asciiNameIndex = GEONAMES_COLUMNS.indexOf("asciiName");
-    var geoNameIdIndex = GEONAMES_COLUMNS.indexOf("geoNameId");
+    var featureCodeIndex = GEONAMES_COLUMNS.indexOf('featureCode');
+    var countryCodeIndex = GEONAMES_COLUMNS.indexOf('countryCode');
+    var admin1CodeIndex = GEONAMES_COLUMNS.indexOf('admin1Code');
+    var admin2CodeIndex = GEONAMES_COLUMNS.indexOf('admin2Code');
+    var admin3CodeIndex = GEONAMES_COLUMNS.indexOf('admin3Code');
+    var admin4CodeIndex = GEONAMES_COLUMNS.indexOf('admin4Code');
+    var nameIndex = GEONAMES_COLUMNS.indexOf('name');
+    var asciiNameIndex = GEONAMES_COLUMNS.indexOf('asciiName');
+    var geoNameIdIndex = GEONAMES_COLUMNS.indexOf('geoNameId');
 
     var counter = 0;
     that._admin3Codes = {};
@@ -618,10 +618,10 @@ var geocoder = {
     var lineReader = readline.createInterface({
       input: fs.createReadStream(pathToCsv),
     });
-    lineReader.on("line", function (line) {
-      line = line.split("\t");
+    lineReader.on('line', function (line) {
+      line = line.split('\t');
       var featureCode = line[featureCodeIndex];
-      if (featureCode === "ADM3" || featureCode === "ADM4") {
+      if (featureCode === 'ADM3' || featureCode === 'ADM4') {
         var lineObj = {
           name: line[nameIndex],
           asciiName: line[asciiNameIndex],
@@ -629,25 +629,25 @@ var geocoder = {
         };
         var key =
           line[countryCodeIndex] +
-          "." +
+          '.' +
           line[admin1CodeIndex] +
-          "." +
+          '.' +
           line[admin2CodeIndex] +
-          "." +
+          '.' +
           line[admin3CodeIndex];
-        if (featureCode === "ADM3") {
+        if (featureCode === 'ADM3') {
           that._admin3Codes[key] = lineObj;
-        } else if (featureCode === "ADM4") {
-          that._admin4Codes[key + "." + line[admin4CodeIndex]] = lineObj;
+        } else if (featureCode === 'ADM4') {
+          that._admin4Codes[key + '.' + line[admin4CodeIndex]] = lineObj;
         }
       }
       if (counter % 100000 === 0) {
-        debug("Parsing progress all countries " + counter);
+        debug('Parsing progress all countries ' + counter);
       }
       counter++;
     });
-    lineReader.on("close", function () {
-      debug("Finished parsing all countries.txt");
+    lineReader.on('close', function () {
+      debug('Finished parsing all countries.txt');
       return callback();
     });
   },
@@ -676,8 +676,8 @@ var geocoder = {
     }
 
     debug(
-      "Initializing local reverse geocoder using dump " +
-        "directory: " +
+      'Initializing local reverse geocoder using dump ' +
+        'directory: ' +
         GEONAMES_DUMP
     );
     // Create local cache folder
@@ -809,59 +809,59 @@ var geocoder = {
         latitude: parseFloat(point.latitude),
         longitude: parseFloat(point.longitude),
       };
-      debug("Look-up request for point " + JSON.stringify(point));
+      debug('Look-up request for point ' + JSON.stringify(point));
       functions[i] = function (innerCallback) {
         var result = that._kdTree.nearest(point, maxResults);
         result.reverse();
         for (var j = 0, lenJ = result.length; j < lenJ; j++) {
           if (result && result[j] && result[j][0]) {
-            var countryCode = result[j][0].countryCode || "";
-            var geoNameId = result[j][0].geoNameId || "";
+            var countryCode = result[j][0].countryCode || '';
+            var geoNameId = result[j][0].geoNameId || '';
             var admin1Code;
             var admin2Code;
             var admin3Code;
             var admin4Code;
             // Look-up of admin 1 code
             if (that._admin1Codes) {
-              admin1Code = result[j][0].admin1Code || "";
-              var admin1CodeKey = countryCode + "." + admin1Code;
+              admin1Code = result[j][0].admin1Code || '';
+              var admin1CodeKey = countryCode + '.' + admin1Code;
               result[j][0].admin1Code =
                 that._admin1Codes[admin1CodeKey] || result[j][0].admin1Code;
             }
             // Look-up of admin 2 code
             if (that._admin2Codes) {
-              admin2Code = result[j][0].admin2Code || "";
+              admin2Code = result[j][0].admin2Code || '';
               var admin2CodeKey =
-                countryCode + "." + admin1Code + "." + admin2Code;
+                countryCode + '.' + admin1Code + '.' + admin2Code;
               result[j][0].admin2Code =
                 that._admin2Codes[admin2CodeKey] || result[j][0].admin2Code;
             }
             // Look-up of admin 3 code
             if (that._admin3Codes) {
-              admin3Code = result[j][0].admin3Code || "";
+              admin3Code = result[j][0].admin3Code || '';
               var admin3CodeKey =
                 countryCode +
-                "." +
+                '.' +
                 admin1Code +
-                "." +
+                '.' +
                 admin2Code +
-                "." +
+                '.' +
                 admin3Code;
               result[j][0].admin3Code =
                 that._admin3Codes[admin3CodeKey] || result[j][0].admin3Code;
             }
             // Look-up of admin 4 code
             if (that._admin4Codes) {
-              admin4Code = result[j][0].admin4Code || "";
+              admin4Code = result[j][0].admin4Code || '';
               var admin4CodeKey =
                 countryCode +
-                "." +
+                '.' +
                 admin1Code +
-                "." +
+                '.' +
                 admin2Code +
-                "." +
+                '.' +
                 admin3Code +
-                "." +
+                '.' +
                 admin4Code;
               result[j][0].admin4Code =
                 that._admin4Codes[admin4CodeKey] || result[j][0].admin4Code;
@@ -878,12 +878,12 @@ var geocoder = {
           }
         }
         debug(
-          "Found result(s) for point " +
+          'Found result(s) for point ' +
             JSON.stringify(point) +
             result.map(function (subResult, i) {
               return (
-                "\n  (" +
-                ++i +
+                '\n  (' +
+                ++i + // jshint ignore:line
                 ') {"geoNameId":"' +
                 subResult.geoNameId +
                 '",' +
@@ -897,7 +897,7 @@ var geocoder = {
       };
     });
     async.series(functions, function (err, results) {
-      debug("Delivering joint results");
+      debug('Delivering joint results');
       return callback(null, results);
     });
   },

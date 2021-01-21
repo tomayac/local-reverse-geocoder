@@ -36,7 +36,7 @@ $ docker run -it -e PORT=3000 --rm local-reverse-geocoder
 ### Look Up
 
 ```javascript
-var geocoder = require("local-reverse-geocoder");
+var geocoder = require('local-reverse-geocoder');
 
 // With just one point
 var point = { latitude: 42.083333, longitude: 3.1 };
@@ -78,7 +78,7 @@ You can optionally initialize the geocoder prior to the first call to lookUp.
 This ensures that all files are loaded into the cache prior to making the first call.
 
 ```javascript
-var geocoder = require("local-reverse-geocoder");
+var geocoder = require('local-reverse-geocoder');
 
 geocoder.init({}, function () {
   // geocoder is loaded and ready to run
@@ -90,7 +90,7 @@ This reduces initialization time and the runtime memory footprint of the nodejs 
 By default all files are loaded.
 
 ```javascript
-var geocoder = require("local-reverse-geocoder");
+var geocoder = require('local-reverse-geocoder');
 
 geocoder.init(
   {
@@ -110,9 +110,9 @@ geocoder.init(
 Optionally `init` allows you to specify the directory that geonames files are downloaded and cached in.
 
 ```javascript
-var geocoder = require("local-reverse-geocoder");
+var geocoder = require('local-reverse-geocoder');
 
-geocoder.init({ dumpDirectory: "/tmp/geonames" }, function () {
+geocoder.init({ dumpDirectory: '/tmp/geonames' }, function () {
   // Ready to call lookUp and all files will be downloaded to /tmp/geonames
 });
 ```
@@ -135,44 +135,44 @@ The measurement units are used [as defined by GeoNames](http://www.geonames.org/
 [
   [
     {
-      geoNameId: "2919146",
-      name: "Gomaringen",
-      asciiName: "Gomaringen",
+      geoNameId: '2919146',
+      name: 'Gomaringen',
+      asciiName: 'Gomaringen',
       alternateNames: null,
-      latitude: "48.45349",
-      longitude: "9.09582",
-      featureClass: "P",
-      featureCode: "PPLA4",
-      countryCode: "DE",
+      latitude: '48.45349',
+      longitude: '9.09582',
+      featureClass: 'P',
+      featureCode: 'PPLA4',
+      countryCode: 'DE',
       cc2: null,
       admin1Code: {
-        name: "Baden-Württemberg",
-        asciiName: "Baden-Wuerttemberg",
-        geoNameId: "2953481",
+        name: 'Baden-Württemberg',
+        asciiName: 'Baden-Wuerttemberg',
+        geoNameId: '2953481',
       },
       admin2Code: {
-        name: "Tübingen Region",
-        asciiName: "Tuebingen Region",
-        geoNameId: "3214106",
+        name: 'Tübingen Region',
+        asciiName: 'Tuebingen Region',
+        geoNameId: '3214106',
       },
       admin3Code: {
-        name: "Landkreis Tübingen",
-        asciiName: "Landkreis Tubingen",
-        geoNameId: "2820859",
+        name: 'Landkreis Tübingen',
+        asciiName: 'Landkreis Tubingen',
+        geoNameId: '2820859',
       },
       admin4Code: {
-        name: "Gomaringen",
-        asciiName: "Gomaringen",
-        geoNameId: "6555939",
+        name: 'Gomaringen',
+        asciiName: 'Gomaringen',
+        geoNameId: '6555939',
       },
-      population: "8400",
+      population: '8400',
       elevation: null,
-      dem: "430",
-      timezone: "Europe/Berlin",
-      modificationDate: "2011-04-25",
+      dem: '430',
+      timezone: 'Europe/Berlin',
+      modificationDate: '2011-04-25',
       alternateName: {
         de: {
-          altName: "Gomaringen",
+          altName: 'Gomaringen',
           isPreferredName: true,
           isShortName: false,
           isColloquial: false,
@@ -182,112 +182,112 @@ The measurement units are used [as defined by GeoNames](http://www.geonames.org/
       distance: 3.1302317076079285,
     },
     {
-      geoNameId: "2814195",
-      name: "Wannweil",
-      asciiName: "Wannweil",
+      geoNameId: '2814195',
+      name: 'Wannweil',
+      asciiName: 'Wannweil',
       alternateNames: null,
-      latitude: "48.51667",
-      longitude: "9.15",
-      featureClass: "P",
-      featureCode: "PPLA4",
-      countryCode: "DE",
+      latitude: '48.51667',
+      longitude: '9.15',
+      featureClass: 'P',
+      featureCode: 'PPLA4',
+      countryCode: 'DE',
       cc2: null,
       admin1Code: {
-        name: "Baden-Württemberg",
-        asciiName: "Baden-Wuerttemberg",
-        geoNameId: "2953481",
+        name: 'Baden-Württemberg',
+        asciiName: 'Baden-Wuerttemberg',
+        geoNameId: '2953481',
       },
       admin2Code: {
-        name: "Tübingen Region",
-        asciiName: "Tuebingen Region",
-        geoNameId: "3214106",
+        name: 'Tübingen Region',
+        asciiName: 'Tuebingen Region',
+        geoNameId: '3214106',
       },
       admin3Code: {
-        name: "Landkreis Reutlingen",
-        asciiName: "Landkreis Reutlingen",
-        geoNameId: "3220792",
+        name: 'Landkreis Reutlingen',
+        asciiName: 'Landkreis Reutlingen',
+        geoNameId: '3220792',
       },
       admin4Code: {
-        name: "Wannweil",
-        asciiName: "Wannweil",
-        geoNameId: "6555933",
+        name: 'Wannweil',
+        asciiName: 'Wannweil',
+        geoNameId: '6555933',
       },
-      population: "5092",
+      population: '5092',
       elevation: null,
-      dem: "320",
-      timezone: "Europe/Berlin",
-      modificationDate: "2011-04-25",
+      dem: '320',
+      timezone: 'Europe/Berlin',
+      modificationDate: '2011-04-25',
       distance: 5.694122211376861,
     },
   ],
   [
     {
-      geoNameId: "3130634",
-      name: "Albons",
-      asciiName: "Albons",
+      geoNameId: '3130634',
+      name: 'Albons',
+      asciiName: 'Albons',
       alternateNames: null,
-      latitude: "42.10389",
-      longitude: "3.08433",
-      featureClass: "P",
-      featureCode: "PPLA3",
-      countryCode: "ES",
+      latitude: '42.10389',
+      longitude: '3.08433',
+      featureClass: 'P',
+      featureCode: 'PPLA3',
+      countryCode: 'ES',
       cc2: null,
       admin1Code: {
-        name: "Catalonia",
-        asciiName: "Catalonia",
-        geoNameId: "3336901",
+        name: 'Catalonia',
+        asciiName: 'Catalonia',
+        geoNameId: '3336901',
       },
       admin2Code: {
-        name: "Província de Girona",
-        asciiName: "Provincia de Girona",
-        geoNameId: "6355230",
+        name: 'Província de Girona',
+        asciiName: 'Provincia de Girona',
+        geoNameId: '6355230',
       },
       admin3Code: {
-        name: "Albons",
-        asciiName: "Albons",
-        geoNameId: "6534005",
+        name: 'Albons',
+        asciiName: 'Albons',
+        geoNameId: '6534005',
       },
       admin4Code: null,
-      population: "558",
-      elevation: "13",
-      dem: "18",
-      timezone: "Europe/Madrid",
-      modificationDate: "2012-03-04",
+      population: '558',
+      elevation: '13',
+      dem: '18',
+      timezone: 'Europe/Madrid',
+      modificationDate: '2012-03-04',
       distance: 2.626176210836868,
     },
     {
-      geoNameId: "3118799",
+      geoNameId: '3118799',
       name: "la Tallada d'Empordà",
       asciiName: "la Tallada d'Emporda",
       alternateNames:
         "La Tallada,la Tallada,la Tallada d'Emporda,la Tallada d'Empordà",
-      latitude: "42.0802",
-      longitude: "3.05583",
-      featureClass: "P",
-      featureCode: "PPLA3",
-      countryCode: "ES",
+      latitude: '42.0802',
+      longitude: '3.05583',
+      featureClass: 'P',
+      featureCode: 'PPLA3',
+      countryCode: 'ES',
       cc2: null,
       admin1Code: {
-        name: "Catalonia",
-        asciiName: "Catalonia",
-        geoNameId: "3336901",
+        name: 'Catalonia',
+        asciiName: 'Catalonia',
+        geoNameId: '3336901',
       },
       admin2Code: {
-        name: "Província de Girona",
-        asciiName: "Provincia de Girona",
-        geoNameId: "6355230",
+        name: 'Província de Girona',
+        asciiName: 'Provincia de Girona',
+        geoNameId: '6355230',
       },
       admin3Code: {
         name: "la Tallada d'Empordà",
         asciiName: "la Tallada d'Emporda",
-        geoNameId: "6534150",
+        geoNameId: '6534150',
       },
       admin4Code: null,
-      population: "0",
+      population: '0',
       elevation: null,
-      dem: "16",
-      timezone: "Europe/Madrid",
-      modificationDate: "2012-03-04",
+      dem: '16',
+      timezone: 'Europe/Madrid',
+      modificationDate: '2012-03-04',
       distance: 3.6618561653699846,
     },
   ],

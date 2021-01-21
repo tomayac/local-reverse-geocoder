@@ -4,7 +4,7 @@ WORKDIR /app
 
 ADD package.json package-lock.json /app/
 RUN npm install
-ADD app.js geocoder.js /app/
+ADD app.js index.js /app/
 
 RUN apk add --no-cache curl && \
     mkdir -p \

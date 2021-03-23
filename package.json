@@ -29,7 +29,7 @@
     "debug": "^4.3.1",
     "kdt": "^0.1.0",
     "request": "^2.88.2",
-    "node-unzip-2": "^0.2.8"
+    "unzip-stream": "^0.3.1"
   },
   "repository": {
     "type": "git",

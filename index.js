@@ -238,10 +238,7 @@ var geocoder = {
       })
       .on('response', (response) => {
         if (response.statusCode !== 200) {
-          callback(
-            'Error downloading GeoNames ${dataName} data' +
-              (err ? ': ' + err : '')
-          );
+          callback('Error downloading GeoNames ${dataName} data');
         }
       })
       .pipe(unzip.Parse())

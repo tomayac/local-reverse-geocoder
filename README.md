@@ -356,5 +356,6 @@ that was ported to Node.js by [Luke Arduini](https://github.com/luk-/node-kdt).
 - [@bloodfire91](https://github.com/bloodfire91)
 - [@yjwong](https://github.com/yjwong)
 - [@RDIL](https://github.com/RDIL)
+- [@tkafka](https://github.com/tkafka)
 
 [![npm](https://nodei.co/npm/local-reverse-geocoder.png?downloads=true)](https://nodei.co/npm/local-reverse-geocoder/)

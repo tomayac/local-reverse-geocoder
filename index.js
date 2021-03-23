@@ -35,9 +35,10 @@ var path = require('path');
 var parse = require('csv-parse');
 var kdTree = require('kdt');
 var request = require('request');
-var unzip = require('node-unzip-2');
+var unzip = require('unzip-stream');
 var async = require('async');
 var readline = require('readline');
+const { basename } = require('path');
 
 // All data from http://download.geonames.org/export/dump/
 var GEONAMES_URL = 'http://download.geonames.org/export/dump/';
@@ -126,93 +127,193 @@ var geocoder = {
     return R * c;
   },
 
-  _getGeoNamesAlternateNamesData: function (callback) {
-    var now = new Date().toISOString().substr(0, 10);
-    // Use timestamped alternate names file OR bare alternate names file
-    var timestampedFilename =
-      GEONAMES_DUMP +
-      '/alternate_names/' +
-      ALTERNATE_NAMES_FILE +
-      '_' +
-      now +
-      '.txt';
+  _getData: function (
+    dataName,
+    baseName,
+    geonamesZipFilename,
+    fileNameInsideZip,
+    outputFileFolderWithoutSlash,
+    downloadMethodBoundToThis,
+    callback
+  ) {
+    const now = new Date().toISOString().substr(0, 10);
+
+    // Use timestamped file OR bare file
+    const timestampedBasename = `${baseName}_${now}.txt`;
+    const timestampedFilename = `${outputFileFolderWithoutSlash}/${timestampedBasename}`;
     if (fs.existsSync(timestampedFilename)) {
       debug(
-        'Using cached GeoNames alternate names data from ' + timestampedFilename
+        `Using cached GeoNames ${dataName} data from ${timestampedFilename}`
       );
       return callback(null, timestampedFilename);
     }
 
-    var filename =
-      GEONAMES_DUMP + '/alternate_names/' + ALTERNATE_NAMES_FILE + '.txt';
+    const filename = `${outputFileFolderWithoutSlash}/${baseName}.txt`;
     if (fs.existsSync(filename)) {
-      debug('Using cached GeoNames alternate names data from ' + filename);
+      debug(`Using cached GeoNames ${dataName} data from ${filename}`);
       return callback(null, filename);
     }
 
-    debug(
-      'Getting GeoNames alternate names data from ' +
-        GEONAMES_URL +
-        ALTERNATE_NAMES_FILE +
-        '.zip (this may take a while)'
+    if (!fs.existsSync(outputFileFolderWithoutSlash)) {
+      fs.mkdirSync(outputFileFolderWithoutSlash, { recursive: true });
+    }
+
+    const outputFileName = timestampedBasename;
+
+    downloadMethodBoundToThis(
+      dataName,
+      geonamesZipFilename,
+      fileNameInsideZip,
+      outputFileFolderWithoutSlash,
+      outputFileName,
+      callback
     );
-    var options = {
-      url: GEONAMES_URL + ALTERNATE_NAMES_FILE + '.zip',
+  },
+
+  _downloadFile: function (
+    dataName,
+    geonamesZipFilename,
+    fileNameInsideZip,
+    outputFileFolderWithoutSlash,
+    outputFileName,
+    callback
+  ) {
+    const geonamesUrl = `${GEONAMES_URL}${geonamesZipFilename}`;
+    const outputFilePath = `${outputFileFolderWithoutSlash}/${outputFileName}`;
+
+    debug(
+      `Getting GeoNames ${dataName} data from ${geonamesUrl} (this may take a while)`
+    );
+
+    request({
+      url: geonamesUrl,
       encoding: null,
-    };
-    request.get(options, function (err, response, body) {
-      if (err || response.statusCode !== 200) {
-        return callback(
-          'Error downloading GeoNames alternate names data' +
+    })
+      .on('error', (err) => {
+        callback(
+          `Error downloading GeoNames ${dataName} data` +
             (err ? ': ' + err : '')
         );
-      }
-      debug('Received zipped GeoNames alternate names data');
-      // Store a dump locally
-      if (!fs.existsSync(GEONAMES_DUMP + '/alternate_names')) {
-        fs.mkdirSync(GEONAMES_DUMP + '/alternate_names');
-      }
-      var zipFilename =
-        GEONAMES_DUMP +
-        '/alternate_names/' +
-        ALTERNATE_NAMES_FILE +
-        '_' +
-        now +
-        '.zip';
-      try {
-        fs.writeFileSync(zipFilename, body);
-        fs.createReadStream(zipFilename)
-          .pipe(unzip.Extract({ path: GEONAMES_DUMP + '/alternate_names' }))
-          .on('error', function (e) {
-            console.error(e);
-          })
-          .on('close', function () {
-            fs.renameSync(filename, timestampedFilename);
-            fs.unlinkSync(
-              GEONAMES_DUMP +
-                '/alternate_names/' +
-                ALTERNATE_NAMES_FILE +
-                '_' +
-                now +
-                '.zip'
+      })
+      .on('response', (response) => {
+        if (response.statusCode !== 200) {
+          callback(
+            `Error downloading GeoNames ${dataName} data (response ${response.statusCode} for url ${geonamesUrl})`
+          );
+        }
+      })
+      .pipe(fs.createWriteStream(outputFilePath))
+      .on('finish', () => {
+        debug(`Downloaded GeoNames ${dataName} data`);
+        this._housekeepingSync(outputFileFolderWithoutSlash, outputFileName);
+        return callback(null, outputFilePath);
+      });
+  },
+
+  _downloadAndExtractFileFromZip: function (
+    dataName,
+    geonamesZipFilename,
+    fileNameInsideZip,
+    outputFileFolderWithoutSlash,
+    outputFileName,
+    callback
+  ) {
+    const geonamesUrl = `${GEONAMES_URL}${geonamesZipFilename}`;
+    const outputFilePath = `${outputFileFolderWithoutSlash}/${outputFileName}`;
+
+    debug(
+      `Getting GeoNames ${dataName} data from ${geonamesUrl} (this may take a while)`
+    );
+
+    let foundFiles = 0;
+    request({
+      url: geonamesUrl,
+      encoding: null,
+    })
+      .on('error', (err) => {
+        callback(
+          `Error downloading GeoNames ${dataName} data` +
+            (err ? ': ' + err : '')
+        );
+      })
+      .on('response', (response) => {
+        if (response.statusCode !== 200) {
+          callback(
+            'Error downloading GeoNames ${dataName} data' +
+              (err ? ': ' + err : '')
+          );
+        }
+      })
+      .pipe(unzip.Parse())
+      .on('entry', (entry) => {
+        var entryPath = entry.path;
+        var entryType = entry.type; // 'Directory' or 'File'
+        var entrySize = entry.size; // might be undefined in some archives
+        if (entryType === 'File' && entryPath === fileNameInsideZip) {
+          debug(
+            `Unzipping GeoNames ${dataName} data - found ${entryType} ${entryPath}` +
+              (typeof entrySize === 'number' ? ` (${entrySize} B)` : '')
+          );
+          foundFiles++;
+          entry.pipe(fs.createWriteStream(outputFilePath)).on('finish', () => {
+            debug(`- unzipped GeoNames ${dataName} data - ${entryPath}`);
+            this._housekeepingSync(
+              outputFileFolderWithoutSlash,
+              outputFileName
             );
-            debug('Unzipped GeoNames alternate names data');
-            // Housekeeping, remove old files
-            var currentFileName = path.basename(timestampedFilename);
-            fs.readdirSync(GEONAMES_DUMP + '/alternate_names').forEach(
-              function (file) {
-                if (file !== currentFileName) {
-                  fs.unlinkSync(GEONAMES_DUMP + '/alternate_names/' + file);
-                }
-              }
-            );
-            return callback(null, timestampedFilename);
+            // file is now written, call callback
+            return callback(null, outputFilePath);
           });
-      } catch (e) {
-        debug('Warning: ' + e);
-        return callback(null, timestampedFilename);
+        } else {
+          debug(
+            `Unzipping GeoNames ${dataName} data - ignoring ${entryType} ${entryPath}`
+          );
+          entry.autodrain();
+        }
+      })
+      .on('finish', () => {
+        // beware - this event is a finish of unzip, finish event of writeStream may and will happen later ...
+        if (foundFiles === 1) {
+          // ... so if we found one file, we call callback in it's finish event above
+          debug(`Unzipped GeoNames ${dataName} data.`);
+          // return callback(null, outputFilePath);
+        } else {
+          // .. while if there is something unexpected, we fire callback here
+          debug(
+            `Error unzipping ${geonamesZipFilename}: Was expecting ${outputFileName}, found ${foundFiles} file(s).`
+          );
+          return callback(
+            `Was expecting ${outputFileName}, found ${foundFiles} file(s).`
+          );
+        }
+      });
+  },
+
+  _housekeepingSync: function (outputFileFolderWithoutSlash, outputFileName) {
+    fs.readdirSync(outputFileFolderWithoutSlash).forEach((foundFile) => {
+      if (foundFile !== outputFileName) {
+        fs.unlinkSync(`${outputFileFolderWithoutSlash}/${foundFile}`);
       }
     });
+  },
+
+  _getGeoNamesAlternateNamesData: function (callback) {
+    this._getData(
+      // dataName
+      'alternate names',
+      // baseName
+      ALTERNATE_NAMES_FILE,
+      // geonamesZipFilename
+      `${ALTERNATE_NAMES_FILE}.zip`,
+      // fileNameInsideZip
+      `${ALTERNATE_NAMES_FILE}.txt`,
+      // outputFileFolderWithoutSlash
+      GEONAMES_DUMP + '/alternate_names',
+      // downloadMethodBoundToThis
+      this._downloadAndExtractFileFromZip.bind(this),
+      // callback
+      callback
+    );
   },
 
   _parseGeoNamesAlternateNamesCsv: function (pathToCsv, callback) {
@@ -258,62 +359,22 @@ var geocoder = {
   },
 
   _getGeoNamesAdmin1CodesData: function (callback) {
-    var now = new Date().toISOString().substr(0, 10);
-    var timestampedFilename =
-      GEONAMES_DUMP +
-      '/admin1_codes/' +
-      ADMIN_1_CODES_FILE +
-      '_' +
-      now +
-      '.txt';
-    if (fs.existsSync(timestampedFilename)) {
-      debug(
-        'Using cached GeoNames admin 1 codes data from ' + timestampedFilename
-      );
-      return callback(null, timestampedFilename);
-    }
-
-    var filename =
-      GEONAMES_DUMP + '/admin1_codes/' + ADMIN_1_CODES_FILE + '.txt';
-    if (fs.existsSync(filename)) {
-      debug('Using cached GeoNames admin 1 codes data from ' + filename);
-      return callback(null, filename);
-    }
-
-    debug(
-      'Getting GeoNames admin 1 codes data from ' +
-        GEONAMES_URL +
-        ADMIN_1_CODES_FILE +
-        '.txt (this may take a while)'
+    this._getData(
+      // dataName
+      'admin 1 codes',
+      // baseName
+      ADMIN_1_CODES_FILE,
+      // geonamesZipFilename
+      `${ADMIN_1_CODES_FILE}.txt`,
+      // fileNameInsideZip
+      null,
+      // outputFileFolderWithoutSlash
+      GEONAMES_DUMP + '/admin1_codes',
+      // downloadMethodBoundToThis
+      this._downloadFile.bind(this),
+      // callback
+      callback
     );
-    var url = GEONAMES_URL + ADMIN_1_CODES_FILE + '.txt';
-    request.get(url, function (err, response, body) {
-      if (err || response.statusCode !== 200) {
-        return callback(
-          'Error downloading GeoNames admin 1 codes data' +
-            (err ? ': ' + err : '')
-        );
-      }
-      // Store a dump locally
-      if (!fs.existsSync(GEONAMES_DUMP + '/admin1_codes')) {
-        fs.mkdirSync(GEONAMES_DUMP + '/admin1_codes');
-      }
-      try {
-        fs.writeFileSync(timestampedFilename, body);
-        // Housekeeping, remove old files
-        var currentFileName = path.basename(timestampedFilename);
-        fs.readdirSync(GEONAMES_DUMP + '/admin1_codes').forEach(function (
-          file
-        ) {
-          if (file !== currentFileName) {
-            fs.unlinkSync(GEONAMES_DUMP + '/admin1_codes/' + file);
-          }
-        });
-      } catch (e) {
-        throw e;
-      }
-      return callback(null, timestampedFilename);
-    });
   },
 
   _parseGeoNamesAdmin1CodesCsv: function (pathToCsv, callback) {
@@ -340,62 +401,22 @@ var geocoder = {
   },
 
   _getGeoNamesAdmin2CodesData: function (callback) {
-    var now = new Date().toISOString().substr(0, 10);
-    var timestampedFilename =
-      GEONAMES_DUMP +
-      '/admin2_codes/' +
-      ADMIN_2_CODES_FILE +
-      '_' +
-      now +
-      '.txt';
-    if (fs.existsSync(timestampedFilename)) {
-      debug(
-        'Using cached GeoNames admin 2 codes data from ' + timestampedFilename
-      );
-      return callback(null, timestampedFilename);
-    }
-
-    var filename =
-      GEONAMES_DUMP + '/admin2_codes/' + ADMIN_2_CODES_FILE + '.txt';
-    if (fs.existsSync(filename)) {
-      debug('Using cached GeoNames admin 2 codes data from ' + filename);
-      return callback(null, filename);
-    }
-
-    debug(
-      'Getting GeoNames admin 2 codes data from ' +
-        GEONAMES_URL +
-        ADMIN_2_CODES_FILE +
-        '.txt (this may take a while)'
+    this._getData(
+      // dataName
+      'admin 2 codes',
+      // baseName
+      ADMIN_2_CODES_FILE,
+      // geonamesZipFilename
+      `${ADMIN_2_CODES_FILE}.txt`,
+      // fileNameInsideZip
+      null,
+      // outputFileFolderWithoutSlash
+      GEONAMES_DUMP + '/admin2_codes',
+      // downloadMethodBoundToThis
+      this._downloadFile.bind(this),
+      // callback
+      callback
     );
-    var url = GEONAMES_URL + ADMIN_2_CODES_FILE + '.txt';
-    request.get(url, function (err, response, body) {
-      if (err || response.statusCode !== 200) {
-        return callback(
-          'Error downloading GeoNames admin 2 codes data' +
-            (err ? ': ' + err : '')
-        );
-      }
-      // Store a dump locally
-      if (!fs.existsSync(GEONAMES_DUMP + '/admin2_codes')) {
-        fs.mkdirSync(GEONAMES_DUMP + '/admin2_codes');
-      }
-      try {
-        fs.writeFileSync(timestampedFilename, body);
-        // Housekeeping, remove old files
-        var currentFileName = path.basename(timestampedFilename);
-        fs.readdirSync(GEONAMES_DUMP + '/admin2_codes').forEach(function (
-          file
-        ) {
-          if (file !== currentFileName) {
-            fs.unlinkSync(GEONAMES_DUMP + '/admin2_codes/' + file);
-          }
-        });
-      } catch (e) {
-        throw e;
-      }
-      return callback(null, timestampedFilename);
-    });
   },
 
   _parseGeoNamesAdmin2CodesCsv: function (pathToCsv, callback) {
@@ -422,68 +443,22 @@ var geocoder = {
   },
 
   _getGeoNamesCitiesData: function (callback) {
-    var now = new Date().toISOString().substr(0, 10);
-    // Use timestamped cities file OR bare cities file
-    var timestampedFilename =
-      GEONAMES_DUMP + '/cities/' + CITIES_FILE + '_' + now + '.txt';
-    if (fs.existsSync(timestampedFilename)) {
-      debug('Using cached GeoNames cities data from ' + timestampedFilename);
-      return callback(null, timestampedFilename);
-    }
-
-    var filename = GEONAMES_DUMP + '/cities/' + CITIES_FILE + '.txt';
-    if (fs.existsSync(filename)) {
-      debug('Using cached GeoNames cities data from ' + filename);
-      return callback(null, filename);
-    }
-
-    debug(
-      'Getting GeoNames cities data from ' +
-        GEONAMES_URL +
-        CITIES_FILE +
-        '.zip (this may take a while)'
+    this._getData(
+      // dataName
+      'cities',
+      // baseName
+      CITIES_FILE,
+      // geonamesZipFilename
+      `${CITIES_FILE}.zip`,
+      // fileNameInsideZip
+      `${CITIES_FILE}.txt`,
+      // outputFileFolderWithoutSlash
+      GEONAMES_DUMP + '/cities',
+      // downloadMethodBoundToThis
+      this._downloadAndExtractFileFromZip.bind(this),
+      // callback
+      callback
     );
-    var options = {
-      url: GEONAMES_URL + CITIES_FILE + '.zip',
-      encoding: null,
-    };
-    request.get(options, function (err, response, body) {
-      if (err || response.statusCode !== 200) {
-        return callback(
-          'Error downloading GeoNames cities data' + (err ? ': ' + err : '')
-        );
-      }
-      debug('Received zipped GeoNames cities data');
-      // Store a dump locally
-      if (!fs.existsSync(GEONAMES_DUMP + '/cities')) {
-        fs.mkdirSync(GEONAMES_DUMP + '/cities');
-      }
-      var zipFilename =
-        GEONAMES_DUMP + '/cities/' + CITIES_FILE + '_' + now + '.zip';
-      try {
-        fs.writeFileSync(zipFilename, body);
-        fs.createReadStream(zipFilename)
-          .pipe(unzip.Extract({ path: GEONAMES_DUMP + '/cities' }))
-          .on('close', function () {
-            fs.renameSync(filename, timestampedFilename);
-            fs.unlinkSync(
-              GEONAMES_DUMP + '/cities/' + CITIES_FILE + '_' + now + '.zip'
-            );
-            debug('Unzipped GeoNames cities data');
-            // Housekeeping, remove old files
-            var currentFileName = path.basename(timestampedFilename);
-            fs.readdirSync(GEONAMES_DUMP + '/cities').forEach(function (file) {
-              if (file !== currentFileName) {
-                fs.unlinkSync(GEONAMES_DUMP + '/cities/' + file);
-              }
-            });
-            return callback(null, timestampedFilename);
-          });
-      } catch (e) {
-        debug('Warning: ' + e);
-        return callback(null, timestampedFilename);
-      }
-    });
   },
 
   _parseGeoNamesCitiesCsv: function (pathToCsv, callback) {
@@ -515,87 +490,22 @@ var geocoder = {
   },
 
   _getGeoNamesAllCountriesData: function (callback) {
-    var now = new Date().toISOString().substr(0, 10);
-    var timestampedFilename =
-      GEONAMES_DUMP +
-      '/all_countries/' +
-      ALL_COUNTRIES_FILE +
-      '_' +
-      now +
-      '.txt';
-    if (fs.existsSync(timestampedFilename)) {
-      debug(
-        'Using cached GeoNames all countries data from ' + timestampedFilename
-      );
-      return callback(null, timestampedFilename);
-    }
-
-    var filename =
-      GEONAMES_DUMP + '/all_countries/' + ALL_COUNTRIES_FILE + '.txt';
-    if (fs.existsSync(filename)) {
-      debug('Using cached GeoNames all countries data from ' + filename);
-      return callback(null, filename);
-    }
-
-    debug(
-      'Getting GeoNames all countries data from ' +
-        GEONAMES_URL +
-        ALL_COUNTRIES_FILE +
-        '.zip (this may take a while)'
+    this._getData(
+      // dataName
+      'all countries',
+      // baseName
+      ALL_COUNTRIES_FILE,
+      // geonamesZipFilename
+      `${ALL_COUNTRIES_FILE}.zip`,
+      // fileNameInsideZip
+      `${ALL_COUNTRIES_FILE}.txt`,
+      // outputFileFolderWithoutSlash
+      GEONAMES_DUMP + '/all_countries',
+      // downloadMethodBoundToThis
+      this._downloadAndExtractFileFromZip.bind(this),
+      // callback
+      callback
     );
-    var options = {
-      url: GEONAMES_URL + ALL_COUNTRIES_FILE + '.zip',
-      encoding: null,
-    };
-    request.get(options, function (err, response, body) {
-      if (err || response.statusCode !== 200) {
-        return callback(
-          'Error downloading GeoNames all countries data' +
-            (err ? ': ' + err : '')
-        );
-      }
-      debug('Received zipped GeoNames all countries data');
-      // Store a dump locally
-      if (!fs.existsSync(GEONAMES_DUMP + '/all_countries')) {
-        fs.mkdirSync(GEONAMES_DUMP + '/all_countries');
-      }
-      var zipFilename =
-        GEONAMES_DUMP +
-        '/all_countries/' +
-        ALL_COUNTRIES_FILE +
-        '_' +
-        now +
-        '.zip';
-      try {
-        fs.writeFileSync(zipFilename, body);
-        fs.createReadStream(zipFilename)
-          .pipe(unzip.Extract({ path: GEONAMES_DUMP + '/all_countries' }))
-          .on('close', function () {
-            fs.renameSync(filename, timestampedFilename);
-            fs.unlinkSync(
-              GEONAMES_DUMP +
-                '/all_countries/' +
-                ALL_COUNTRIES_FILE +
-                '_' +
-                now +
-                '.zip'
-            );
-            debug('Unzipped GeoNames all countries data');
-            // Housekeeping, remove old files
-            var currentFileName = path.basename(timestampedFilename);
-            var directory = GEONAMES_DUMP + '/all_countries';
-            fs.readdirSync(directory).forEach(function (file) {
-              if (file !== currentFileName) {
-                fs.unlinkSync(GEONAMES_DUMP + '/all_countries/' + file);
-              }
-            });
-            return callback(null, timestampedFilename);
-          });
-      } catch (e) {
-        debug('Warning: ' + e);
-        return callback(null, timestampedFilename);
-      }
-    });
   },
 
   _parseGeoNamesAllCountriesCsv: function (pathToCsv, callback) {

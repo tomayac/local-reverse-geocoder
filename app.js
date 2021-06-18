@@ -17,7 +17,7 @@ app.get('/deep-healthcheck', function (req, res) {
   }
 });
 
-app.get('/geocode', function (req, res) {
+app.get(/geocode/, function (req, res) {
   if (!isGeocodeInitialized) {
     return res.status(503).send('Not ready yet.');
   }

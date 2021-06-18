@@ -48,6 +48,7 @@ var ADMIN_1_CODES_FILE = 'admin1CodesASCII';
 var ADMIN_2_CODES_FILE = 'admin2Codes';
 var ALL_COUNTRIES_FILE = 'allCountries';
 var ALTERNATE_NAMES_FILE = 'alternateNames';
+var COUNTRY_CODE = '';
 
 /* jshint maxlen: false */
 var GEONAMES_COLUMNS = [
@@ -505,6 +506,53 @@ var geocoder = {
     );
   },
 
+  _parseGeoNamesCountryCsv: function (pathToCsv, callback) {
+    debug('Started parsing cities.txt (this  may take a ' + 'while)');
+    var data = [];
+    var lenI = GEONAMES_COLUMNS.length;
+    var that = this;
+    var content = fs.readFileSync(pathToCsv);
+    parse(content, { delimiter: '\t', quote: '' }, function (err, lines) {
+      if (err) {
+        return callback(err);
+      }
+      lines.forEach(function (line) {
+        var lineObj = {};
+        for (var i = 0; i < lenI; i++) {
+          var column = line[i] || null;
+          lineObj[GEONAMES_COLUMNS[i]] = column;
+        }
+        data.push(lineObj);
+      });
+
+      debug('Finished parsing cities.txt');
+      debug('Started building cities k-d tree (this may take ' + 'a while)');
+      var dimensions = ['latitude', 'longitude'];
+      that._kdTree = kdTree.createKdTree(data, that._distanceFunc, dimensions);
+      debug('Finished building cities k-d tree');
+      return callback();
+    });
+  },
+
+  _getGeoNamesCountriesData: function (callback) {
+    this._getData(
+      // dataName
+      COUNTRY_CODE,
+      // baseName
+      COUNTRY_CODE,
+      // geonamesZipFilename
+      `${COUNTRY_CODE.toUpperCase()}.zip`,
+      // fileNameInsideZip
+      `${COUNTRY_CODE.toUpperCase()}.txt`,
+      // outputFileFolderWithoutSlash
+      GEONAMES_DUMP + `/${COUNTRY_CODE.toUpperCase()}`,
+      // downloadMethodBoundToThis
+      this._downloadAndExtractFileFromZip.bind(this),
+      // callback
+      callback
+    );
+  },
+
   _parseGeoNamesAllCountriesCsv: function (pathToCsv, callback) {
     debug('Started parsing all countries.txt (this  may take ' + 'a while)');
     var that = this;
@@ -561,11 +609,17 @@ var geocoder = {
 
   init: function (options, callback) {
     options = options || {};
+
     if (options.dumpDirectory) {
       GEONAMES_DUMP = options.dumpDirectory;
     }
 
     options.load = options.load || {};
+    // Check if country code is provided
+    if (options?.country) {
+      options.load.country = options?.country;
+    }
+
     if (options.load.admin1 === undefined) {
       options.load.admin1 = true;
     }
@@ -592,95 +646,146 @@ var geocoder = {
       fs.mkdirSync(GEONAMES_DUMP);
     }
     var that = this;
-    async.parallel(
-      [
-        // Get GeoNames cities
-        function (waterfallCallback) {
-          async.waterfall(
-            [
-              that._getGeoNamesCitiesData.bind(that),
-              that._parseGeoNamesCitiesCsv.bind(that),
-            ],
-            function () {
-              return waterfallCallback();
+
+    if (!options.load.one_country) {
+      async.parallel(
+        [
+          // Get GeoNames cities
+          function (waterfallCallback) {
+            async.waterfall(
+              [
+                that._getGeoNamesCitiesData.bind(that),
+                that._parseGeoNamesCitiesCsv.bind(that),
+              ],
+              function () {
+                return waterfallCallback();
+              }
+            );
+          },
+          // Get GeoNames admin 1 codes
+          function (waterfallCallback) {
+            if (options.load.admin1) {
+              async.waterfall(
+                [
+                  that._getGeoNamesAdmin1CodesData.bind(that),
+                  that._parseGeoNamesAdmin1CodesCsv.bind(that),
+                ],
+                function () {
+                  return waterfallCallback();
+                }
+              );
+            } else {
+              return setImmediate(waterfallCallback);
             }
-          );
-        },
-        // Get GeoNames admin 1 codes
-        function (waterfallCallback) {
-          if (options.load.admin1) {
-            async.waterfall(
-              [
-                that._getGeoNamesAdmin1CodesData.bind(that),
-                that._parseGeoNamesAdmin1CodesCsv.bind(that),
-              ],
-              function () {
-                return waterfallCallback();
-              }
-            );
-          } else {
-            return setImmediate(waterfallCallback);
+          },
+          // Get GeoNames admin 2 codes
+          function (waterfallCallback) {
+            if (options.load.admin2) {
+              async.waterfall(
+                [
+                  that._getGeoNamesAdmin2CodesData.bind(that),
+                  that._parseGeoNamesAdmin2CodesCsv.bind(that),
+                ],
+                function () {
+                  return waterfallCallback();
+                }
+              );
+            } else {
+              return setImmediate(waterfallCallback);
+            }
+          },
+          // Get GeoNames all countries
+          function (waterfallCallback) {
+            if (options.load.admin3And4) {
+              async.waterfall(
+                [
+                  that._getGeoNamesAllCountriesData.bind(that),
+                  that._parseGeoNamesAllCountriesCsv.bind(that),
+                ],
+                function () {
+                  return waterfallCallback();
+                }
+              );
+            } else {
+              return setImmediate(waterfallCallback);
+            }
+          },
+          // Get GeoNames alternate names
+          function (waterfallCallback) {
+            if (options.load.alternateNames) {
+              async.waterfall(
+                [
+                  that._getGeoNamesAlternateNamesData.bind(that),
+                  that._parseGeoNamesAlternateNamesCsv.bind(that),
+                ],
+                function () {
+                  return waterfallCallback();
+                }
+              );
+            } else {
+              return setImmediate(waterfallCallback);
+            }
+          },
+          // Get GeoNames of specific countries
+          function (waterfallCallback) {
+            if (options.load.country) {
+              COUNTRY_CODE = options.load.country;
+              async.waterfall(
+                [
+                  that._getGeoNamesCountriesData.bind(that),
+                  that._parseGeoNamesCountryCsv.bind(that),
+                ],
+                function () {
+                  return waterfallCallback();
+                }
+              );
+            } else {
+              return setImmediate(waterfallCallback);
+            }
+          },
+        ],
+        // Main callback
+        function (err) {
+          if (err) {
+            throw err;
           }
-        },
-        // Get GeoNames admin 2 codes
-        function (waterfallCallback) {
-          if (options.load.admin2) {
-            async.waterfall(
-              [
-                that._getGeoNamesAdmin2CodesData.bind(that),
-                that._parseGeoNamesAdmin2CodesCsv.bind(that),
-              ],
-              function () {
-                return waterfallCallback();
-              }
-            );
-          } else {
-            return setImmediate(waterfallCallback);
+          if (callback) {
+            return callback();
           }
-        },
-        // Get GeoNames all countries
-        function (waterfallCallback) {
-          if (options.load.admin3And4) {
-            async.waterfall(
-              [
-                that._getGeoNamesAllCountriesData.bind(that),
-                that._parseGeoNamesAllCountriesCsv.bind(that),
-              ],
-              function () {
-                return waterfallCallback();
-              }
-            );
-          } else {
-            return setImmediate(waterfallCallback);
-          }
-        },
-        // Get GeoNames alternate names
-        function (waterfallCallback) {
-          if (options.load.alternateNames) {
-            async.waterfall(
-              [
-                that._getGeoNamesAlternateNamesData.bind(that),
-                that._parseGeoNamesAlternateNamesCsv.bind(that),
-              ],
-              function () {
-                return waterfallCallback();
-              }
-            );
-          } else {
-            return setImmediate(waterfallCallback);
-          }
-        },
-      ],
-      // Main callback
-      function (err) {
-        if (err) {
-          throw err;
         }
-        if (callback) {
-          return callback();
+      );
+    } else {
+      async.parallel(
+        [
+          // Get GeoNames of specific countries
+          function (waterfallCallback) {
+            if (options.load.country) {
+              COUNTRY_CODE = options.load.country;
+              async.waterfall(
+                [
+                  that._getGeoNamesCountriesData.bind(that),
+                  that._parseGeoNamesCountryCsv.bind(that),
+                ],
+                function () {
+                  return waterfallCallback();
+                }
+              );
+            } else {
+              return setImmediate(waterfallCallback);
+            }
+          },
+        ],
+        // Main callback
+        function (err) {
+          if (err) {
+            throw err;
+          }
+          if (callback) {
+            return callback();
+          }
         }
-      }
-    );
+      );
+    }
   },
 
   lookUp: function (points, arg2, arg3) {

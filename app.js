@@ -17,7 +17,7 @@ app.get('/deep-healthcheck', function (req, res) {
   }
 });
 
-app.get(/geocode/, function (req, res) {
+app.get('/geocode', function (req, res) {
   if (!isGeocodeInitialized) {
     return res.status(503).send('Not ready yet.');
   }
@@ -51,8 +51,20 @@ var port = Number(process.env.PORT || 3000);
 app.listen(port, function () {
   console.log('Local reverse geocoder listening on port ' + port);
   console.log('Initializing Geocoder...');
-  geocoder.init({}, function () {
-    console.log('Geocoder initialized and ready.');
-    isGeocodeInitialized = true;
-  });
+  geocoder.init(
+    {
+      load: {
+        country: 'SG',
+        admin1: false,
+        admin2: false,
+        admin3And4: false,
+        alternateNames: false,
+        one_country: false,
+      },
+    },
+    function () {
+      console.log('Geocoder initialized and ready.');
+      isGeocodeInitialized = true;
+    }
+  );
 });

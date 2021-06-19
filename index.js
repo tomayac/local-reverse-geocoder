@@ -647,7 +647,7 @@ var geocoder = {
     }
     var that = this;
 
-    if (!options.load.one_country) {
+    if (options.countries.length === 0) {
       async.parallel(
         [
           // Get GeoNames cities
@@ -726,23 +726,6 @@ var geocoder = {
               return setImmediate(waterfallCallback);
             }
           },
-          // Get GeoNames of specific countries
-          function (waterfallCallback) {
-            if (options.load.country) {
-              COUNTRY_CODE = options.load.country;
-              async.waterfall(
-                [
-                  that._getGeoNamesCountriesData.bind(that),
-                  that._parseGeoNamesCountryCsv.bind(that),
-                ],
-                function () {
-                  return waterfallCallback();
-                }
-              );
-            } else {
-              return setImmediate(waterfallCallback);
-            }
-          },
         ],
         // Main callback
         function (err) {
@@ -759,17 +742,20 @@ var geocoder = {
         [
           // Get GeoNames of specific countries
           function (waterfallCallback) {
-            if (options.load.country) {
-              COUNTRY_CODE = options.load.country;
-              async.waterfall(
-                [
-                  that._getGeoNamesCountriesData.bind(that),
-                  that._parseGeoNamesCountryCsv.bind(that),
-                ],
-                function () {
-                  return waterfallCallback();
-                }
-              );
+            if (options.countries.length > 0) {
+              options.countries.map((country) => {
+                COUNTRY_CODE = country;
+                async.waterfall(
+                  [
+                    that._getGeoNamesCountriesData.bind(that),
+                    that._parseGeoNamesCountryCsv.bind(that),
+                  ],
+
+                  function () {
+                    return waterfallCallback();
+                  }
+                );
+              });
             } else {
               return setImmediate(waterfallCallback);
             }

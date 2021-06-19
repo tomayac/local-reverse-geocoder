@@ -743,7 +743,7 @@ var geocoder = {
           // Get GeoNames of specific countries
           function (waterfallCallback) {
             if (options.countries.length > 0) {
-              options.countries.map((country) => {
+              options.countries.map((country, index) => {
                 COUNTRY_CODE = country;
                 async.waterfall(
                   [
@@ -751,9 +751,10 @@ var geocoder = {
                     that._parseGeoNamesCountryCsv.bind(that),
                   ],
 
-                  function () {
-                    return waterfallCallback();
-                  }
+                  options.countries.length - 1 === index &&
+                    function () {
+                      return waterfallCallback();
+                    }
                 );
               });
             } else {

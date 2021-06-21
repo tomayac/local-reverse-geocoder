@@ -59,7 +59,7 @@ app.listen(port, function () {
         admin3And4: false,
         alternateNames: false,
       },
-      countries: ['SG', 'AU', 'US'], // <== New, defaults to all countries if array is empty
+      countries: [],
     },
     function () {
       console.log('Geocoder initialized and ready.');

@@ -88,7 +88,7 @@ geocoder.init({}, function () {
 ```
 
 Optionally `init` also allows you to specify which files to load data from. This
-reduces initialization time and the runtime memory footprint of the nodejs
+reduces initialization time and the runtime memory footprint of the Node.js
 process. By default all files are loaded.
 
 ```javascript
@@ -318,11 +318,11 @@ like Google's
 ## A Word on Initialization Speed
 
 The initial lookup takes quite a while, as the geocoder has to download roughly
-300MB of data that it then caches locally (unzipped, this occupies about 1.3GB
+2GB(!) of data that it then caches locally (unzipped, this occupies about 1.3GB
 of disk space). All follow-up requests are lightning fast. To reduce the time
 taken to initialize the data, you can manually configure it to only download a
 specific set of countries from Geonames. Do note that when you add a country
-code into the array, it will disable geocoder from downloading all ~300MB worth
+code into the array, it will disable geocoder from downloading all ~2GB(!) worth
 of data and only load the specified countries' data. If you want to re-enable
 geocoder to download all data, the countries array needs to be empty.
 

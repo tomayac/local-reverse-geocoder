@@ -17,7 +17,7 @@ app.get('/deep-healthcheck', function (req, res) {
   }
 });
 
-app.get(/geocode/, function (req, res) {
+app.get('/geocode', function (req, res) {
   if (!isGeocodeInitialized) {
     return res.status(503).send('Not ready yet.');
   }
@@ -55,15 +55,15 @@ app.listen(port, function () {
     {
       load: {
         admin1: true,
-        admin2: false,
-        admin3And4: false,
-        alternateNames: false,
+        admin2: true,
+        admin3And4: true,
+        alternateNames: true,
       },
-      countries: [],
+      countries: ['AT'],
     },
     function () {
       console.log('Geocoder initialized and ready.');
       isGeocodeInitialized = true;
-    }
+    },
   );
 });

@@ -1,12 +1,12 @@
 # Local Reverse Geocoder
 
 This library provides a local reverse geocoder for Node.js that is based on
-[GeoNames](https://download.geonames.org/export/dump/) data. It is _local_
-in the sense that there are no calls to a remote service like the
+[GeoNames](https://download.geonames.org/export/dump/) data. It is _local_ in
+the sense that there are no calls to a remote service like the
 [Google Maps API](https://developers.google.com/maps/documentation/javascript/geocoding#ReverseGeocoding),
-and in consequence the gecoder is suitable for batch reverse geocoding.
-It is _reverse_ in the sense that you give it a (list of) point(s), _i.e._,
-a latitude/longitude pair, and it returns the closest city to that point.
+and in consequence the gecoder is suitable for batch reverse geocoding. It is
+_reverse_ in the sense that you give it a (list of) point(s), _i.e._, a
+latitude/longitude pair, and it returns the closest city to that point.
 
 ## Installation
 
@@ -22,7 +22,8 @@ $ yarn add local-reverse-geocoder
 
 ## Docker
 
-For usage with [Docker](https://www.docker.com/), a Dockerfile is available in this project. It caches all the required files from GeoNames.
+For usage with [Docker](https://www.docker.com/), a Dockerfile is available in
+this project. It caches all the required files from GeoNames.
 
 To use it:
 
@@ -75,7 +76,8 @@ geocoder.lookUp(points, maxResults, function (err, res) {
 ### Init
 
 You can optionally initialize the geocoder prior to the first call to lookUp.
-This ensures that all files are loaded into the cache prior to making the first call.
+This ensures that all files are loaded into the cache prior to making the first
+call.
 
 ```javascript
 var geocoder = require('local-reverse-geocoder');
@@ -85,9 +87,9 @@ geocoder.init({}, function () {
 });
 ```
 
-Optionally `init` also allows you to specify which files to load data from.
-This reduces initialization time and the runtime memory footprint of the nodejs process.
-By default all files are loaded.
+Optionally `init` also allows you to specify which files to load data from. This
+reduces initialization time and the runtime memory footprint of the nodejs
+process. By default all files are loaded.
 
 ```javascript
 var geocoder = require('local-reverse-geocoder');
@@ -103,11 +105,12 @@ geocoder.init(
   },
   function () {
     // Ready to call lookUp
-  }
+  },
 );
 ```
 
-Optionally `init` allows you to specify the directory that geonames files are downloaded and cached in.
+Optionally `init` allows you to specify the directory that geonames files are
+downloaded and cached in.
 
 ```javascript
 var geocoder = require('local-reverse-geocoder');
@@ -127,9 +130,16 @@ $ curl "http://localhost:3000/geocode?latitude=48.466667&longitude=9.133333&lati
 
 ## Result Format
 
-An output array that maps each point in the input array (or input object converted to a single-element array) to the `maxResults` closest addresses.
+An output array that maps each point in the input array (or input object
+converted to a single-element array) to the `maxResults` closest addresses.
 
-The measurement units are used [as defined by GeoNames](http://www.geonames.org/export/web-services.html), for example, `elevation` is measured in meters. The `distance` value is dynamically calculated based on the [haversine distance](http://www.movable-type.co.uk/scripts/latlong.html) for the input point(s) to each of the particular results points and is measured in kilometers.
+The measurement units are used
+[as defined by GeoNames](http://www.geonames.org/export/web-services.html), for
+example, `elevation` is measured in meters. The `distance` value is dynamically
+calculated based on the
+[haversine distance](http://www.movable-type.co.uk/scripts/latlong.html) for the
+input point(s) to each of the particular results points and is measured in
+kilometers.
 
 ```javascript
 [
@@ -297,9 +307,9 @@ The measurement units are used [as defined by GeoNames](http://www.geonames.org/
 ## A Word on Accuracy
 
 By design, _i.e._, due to the granularity of the available
-[GeoNames data](http://download.geonames.org/export/dump/cities1000.zip),
-this reverse geocoder is limited to city-level, so no streets or house numbers.
-In many cases this is already sufficient, but obviously your actual mileage may
+[GeoNames data](http://download.geonames.org/export/dump/cities1000.zip), this
+reverse geocoder is limited to city-level, so no streets or house numbers. In
+many cases this is already sufficient, but obviously your actual mileage may
 vary. If you need street-level granularity, you are better off with a service
 like Google's
 [reverse geocoding API](https://developers.google.com/maps/documentation/javascript/geocoding#ReverseGeocoding).
@@ -309,7 +319,12 @@ like Google's
 
 The initial lookup takes quite a while, as the geocoder has to download roughly
 300MB of data that it then caches locally (unzipped, this occupies about 1.3GB
-of disk space). All follow-up requests are lightning fast. To reduce the time taken to initialize the data, you can manually configure it to only download a specific country from Geonames. Do note that when you add a country code into the array, it'll disable geocoder from downloading all 300mb worth of data. If you want to re-enable geocoder to download all 300mb worth of data, the countries array will need to be empty.
+of disk space). All follow-up requests are lightning fast. To reduce the time
+taken to initialize the data, you can manually configure it to only download a
+specific set of countries from Geonames. Do note that when you add a country
+code into the array, it will disable geocoder from downloading all ~300MB worth
+of data and only load the specified countries' data. If you want to re-enable
+geocoder to download all data, the countries array needs to be empty.
 
 #### Example of getting data for individual country
 
@@ -319,56 +334,62 @@ geocoder.init(
   {
     load: {
       admin1: true,
-      admin2: false,
-      admin3And4: false,
-      alternateNames: false,
+      admin2: true,
+      admin3And4: true,
+      alternateNames: true,
     },
-    countries: ['SG', 'AU'], // <== Add each country by their country code in the array. If I only want data from Singapore, I'll add "SG" into the array and if I also want data from Australia, I can add "AU" into the array.
+    // Comma-separated list of country codes. An empty array means all countries.
+    countries: ['SG', 'AU'],
   },
   function () {
     // Ready to call lookUp
-  }
+  },
 );
 ```
 
 ## A Word on Data Freshness
 
-By default, the local [GeoNames dump](http://download.geonames.org/export/dump/) data gets refreshed each day.
-You can override this behavior by removing the timestamp from the files in the `./geonames_dump` download folder.
-If you don't need admin1, admin2, admin3, admin4 or alternate names you can turn them
-off in a manual init call and decrease load time.
+By default, the local [GeoNames dump](http://download.geonames.org/export/dump/)
+data gets refreshed each day. You can override this behavior by removing the
+timestamp from the files in the `./geonames_dump` download folder. If you don't
+need admin1, admin2, admin3, admin4 or alternate names you can turn them off in
+a manual init call and decrease load time.
 
 ## A Word on Memory Usage
 
-If you run into a `FATAL ERROR: CALL_AND_RETRY_LAST Allocation failed - JavaScript heap out of memory` issue,
-try running node with the [V8 option](https://github.com/nodejs/node/issues/7937) `--max-old-space-size=2000`.
+If you run into a
+`FATAL ERROR: CALL_AND_RETRY_LAST Allocation failed - JavaScript heap out of memory`
+issue, try running node with the
+[V8 option](https://github.com/nodejs/node/issues/7937)
+`--max-old-space-size=2000`.
 
 ## A Word on Debugging
 
-To turn on debug logging add a DEBUG=local-reverse-geocoder environment variable on the command line.
+To turn on debug logging add a DEBUG=local-reverse-geocoder environment variable
+on the command line.
 
 ## License
 
 Copyright 2017-2021 Thomas Steiner (tomac@google.com)
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+Licensed under the Apache License, Version 2.0 (the "License"); you may not use
+this file except in compliance with the License. You may obtain a copy of the
+License at
 
 [http://www.apache.org/licenses/LICENSE-2.0](http://www.apache.org/licenses/LICENSE-2.0)
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+Unless required by applicable law or agreed to in writing, software distributed
+under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
+CONDITIONS OF ANY KIND, either express or implied. See the License for the
+specific language governing permissions and limitations under the License.
 
 ## Acknowledgements
 
 This project was inspired by Richard Penman's Python
-[reverse geocoder](https://bitbucket.org/richardpenman/reverse_geocode/).
-It uses Ubilabs' [k-d-tree implementation](https://github.com/ubilabs/kd-tree-javascript)
-that was ported to Node.js by [Luke Arduini](https://github.com/luk-/node-kdt).
+[reverse geocoder](https://bitbucket.org/richardpenman/reverse_geocode/). It
+uses Ubilabs'
+[k-d-tree implementation](https://github.com/ubilabs/kd-tree-javascript) that
+was ported to Node.js by [Luke Arduini](https://github.com/luk-/node-kdt).
 
 ## Contributors
 
@@ -377,5 +398,6 @@ that was ported to Node.js by [Luke Arduini](https://github.com/luk-/node-kdt).
 - [@yjwong](https://github.com/yjwong)
 - [@RDIL](https://github.com/RDIL)
 - [@tkafka](https://github.com/tkafka)
+- [@helloitsm3](https://github.com/helloitsm3)
 
 [![npm](https://nodei.co/npm/local-reverse-geocoder.png?downloads=true)](https://nodei.co/npm/local-reverse-geocoder/)

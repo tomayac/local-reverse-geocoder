@@ -309,7 +309,27 @@ like Google's
 
 The initial lookup takes quite a while, as the geocoder has to download roughly
 300MB of data that it then caches locally (unzipped, this occupies about 1.3GB
-of disk space). All follow-up requests are lightning fast.
+of disk space). All follow-up requests are lightning fast. To reduce the time taken to initialize the data, you can manually configure it to only download a specific country from Geonames. Do note that when you add a country code into the array, it'll disable geocoder from downloading all 300mb worth of data. If you want to re-enable geocoder to download all 300mb worth of data, the countries array will need to be empty.
+
+#### Example of getting data for individual country
+
+```javascript
+const geocoder = require('local-reverse-geocoder');
+geocoder.init(
+  {
+    load: {
+      admin1: true,
+      admin2: false,
+      admin3And4: false,
+      alternateNames: false,
+    },
+    countries: ['SG', 'AU'], // <== Add each country by their country code in the array. If I only want data from Singapore, I'll add "SG" into the array and if I also want data from Australia, I can add "AU" into the array.
+  },
+  function () {
+    // Ready to call lookUp
+  }
+);
+```
 
 ## A Word on Data Freshness
 

@@ -135,7 +135,7 @@ var geocoder = {
     fileNameInsideZip,
     outputFileFolderWithoutSlash,
     downloadMethodBoundToThis,
-    callback,
+    callback
   ) {
     const now = new Date().toISOString().substr(0, 10);
 
@@ -144,7 +144,7 @@ var geocoder = {
     const timestampedFilename = `${outputFileFolderWithoutSlash}/${timestampedBasename}`;
     if (fs.existsSync(timestampedFilename)) {
       debug(
-        `Using cached GeoNames ${dataName} data from ${timestampedFilename}`,
+        `Using cached GeoNames ${dataName} data from ${timestampedFilename}`
       );
       return callback(null, timestampedFilename);
     }
@@ -167,7 +167,7 @@ var geocoder = {
       fileNameInsideZip,
       outputFileFolderWithoutSlash,
       outputFileName,
-      callback,
+      callback
     );
   },
 
@@ -177,13 +177,13 @@ var geocoder = {
     fileNameInsideZip,
     outputFileFolderWithoutSlash,
     outputFileName,
-    callback,
+    callback
   ) {
     const geonamesUrl = `${GEONAMES_URL}${geonamesZipFilename}`;
     const outputFilePath = `${outputFileFolderWithoutSlash}/${outputFileName}`;
 
     debug(
-      `Getting GeoNames ${dataName} data from ${geonamesUrl} (this may take a while)`,
+      `Getting GeoNames ${dataName} data from ${geonamesUrl} (this may take a while)`
     );
 
     request({
@@ -193,13 +193,13 @@ var geocoder = {
       .on('error', (err) => {
         callback(
           `Error downloading GeoNames ${dataName} data` +
-            (err ? ': ' + err : ''),
+            (err ? ': ' + err : '')
         );
       })
       .on('response', (response) => {
         if (response.statusCode !== 200) {
           callback(
-            `Error downloading GeoNames ${dataName} data (response ${response.statusCode} for url ${geonamesUrl})`,
+            `Error downloading GeoNames ${dataName} data (response ${response.statusCode} for url ${geonamesUrl})`
           );
         }
       })
@@ -217,13 +217,13 @@ var geocoder = {
     fileNameInsideZip,
     outputFileFolderWithoutSlash,
     outputFileName,
-    callback,
+    callback
   ) {
     const geonamesUrl = `${GEONAMES_URL}${geonamesZipFilename}`;
     const outputFilePath = `${outputFileFolderWithoutSlash}/${outputFileName}`;
 
     debug(
-      `Getting GeoNames ${dataName} data from ${geonamesUrl} (this may take a while)`,
+      `Getting GeoNames ${dataName} data from ${geonamesUrl} (this may take a while)`
     );
 
     let foundFiles = 0;
@@ -234,7 +234,7 @@ var geocoder = {
       .on('error', (err) => {
         callback(
           `Error downloading GeoNames ${dataName} data` +
-            (err ? ': ' + err : ''),
+            (err ? ': ' + err : '')
         );
       })
       .on('response', (response) => {
@@ -250,21 +250,21 @@ var geocoder = {
         if (entryType === 'File' && entryPath === fileNameInsideZip) {
           debug(
             `Unzipping GeoNames ${dataName} data - found ${entryType} ${entryPath}` +
-              (typeof entrySize === 'number' ? ` (${entrySize} B)` : ''),
+              (typeof entrySize === 'number' ? ` (${entrySize} B)` : '')
           );
           foundFiles++;
           entry.pipe(fs.createWriteStream(outputFilePath)).on('finish', () => {
             debug(`- unzipped GeoNames ${dataName} data - ${entryPath}`);
             this._housekeepingSync(
               outputFileFolderWithoutSlash,
-              outputFileName,
+              outputFileName
             );
             // file is now written, call callback
             return callback(null, outputFilePath);
           });
         } else {
           debug(
-            `Unzipping GeoNames ${dataName} data - ignoring ${entryType} ${entryPath}`,
+            `Unzipping GeoNames ${dataName} data - ignoring ${entryType} ${entryPath}`
           );
           entry.autodrain();
         }
@@ -278,10 +278,10 @@ var geocoder = {
         } else {
           // .. while if there is something unexpected, we fire callback here
           debug(
-            `Error unzipping ${geonamesZipFilename}: Was expecting ${outputFileName}, found ${foundFiles} file(s).`,
+            `Error unzipping ${geonamesZipFilename}: Was expecting ${outputFileName}, found ${foundFiles} file(s).`
           );
           return callback(
-            `Was expecting ${outputFileName}, found ${foundFiles} file(s).`,
+            `Was expecting ${outputFileName}, found ${foundFiles} file(s).`
           );
         }
       });
@@ -310,7 +310,7 @@ var geocoder = {
       // downloadMethodBoundToThis
       this._downloadAndExtractFileFromZip.bind(this),
       // callback
-      callback,
+      callback
     );
   },
 
@@ -371,7 +371,7 @@ var geocoder = {
       // downloadMethodBoundToThis
       this._downloadFile.bind(this),
       // callback
-      callback,
+      callback
     );
   },
 
@@ -413,7 +413,7 @@ var geocoder = {
       // downloadMethodBoundToThis
       this._downloadFile.bind(this),
       // callback
-      callback,
+      callback
     );
   },
 
@@ -455,12 +455,12 @@ var geocoder = {
       // downloadMethodBoundToThis
       this._downloadAndExtractFileFromZip.bind(this),
       // callback
-      callback,
+      callback
     );
   },
 
   _parseGeoNamesCitiesCsv: function (pathToCsv, callback) {
-    debug('Started parsing cities.txt (this  may take a ' + 'while)');
+    debug('Started parsing cities.txt (this  may take a while)');
     var data = [];
     var lenI = GEONAMES_COLUMNS.length;
     var that = this;
@@ -479,7 +479,7 @@ var geocoder = {
       });
 
       debug('Finished parsing cities.txt');
-      debug('Started building cities k-d tree (this may take ' + 'a while)');
+      debug('Started building cities k-d tree (this may take a while)');
       var dimensions = ['latitude', 'longitude'];
       that._kdTree = kdTree.createKdTree(data, that._distanceFunc, dimensions);
       debug('Finished building cities k-d tree');
@@ -502,12 +502,12 @@ var geocoder = {
       // downloadMethodBoundToThis
       this._downloadAndExtractFileFromZip.bind(this),
       // callback
-      callback,
+      callback
     );
   },
 
   _parseGeoNamesCountryCsv: function (pathToCsv, callback) {
-    debug('Started parsing cities.txt (this  may take a ' + 'while)');
+    debug('Started parsing cities.txt (this  may take a while)');
     var data = [];
     var lenI = GEONAMES_COLUMNS.length;
     var that = this;
@@ -526,7 +526,7 @@ var geocoder = {
       });
 
       debug('Finished parsing cities.txt');
-      debug('Started building cities k-d tree (this may take ' + 'a while)');
+      debug('Started building cities k-d tree (this may take a while)');
       var dimensions = ['latitude', 'longitude'];
       that._kdTree = kdTree.createKdTree(data, that._distanceFunc, dimensions);
       debug('Finished building cities k-d tree');
@@ -549,12 +549,12 @@ var geocoder = {
       // downloadMethodBoundToThis
       this._downloadAndExtractFileFromZip.bind(this),
       // callback
-      callback,
+      callback
     );
   },
 
   _parseGeoNamesAllCountriesCsv: function (pathToCsv, callback) {
-    debug('Started parsing all countries.txt (this  may take ' + 'a while)');
+    debug('Started parsing all countries.txt (this  may take a while)');
     var that = this;
     // Indexes
     var featureCodeIndex = GEONAMES_COLUMNS.indexOf('featureCode');
@@ -615,10 +615,6 @@ var geocoder = {
     }
 
     options.load = options.load || {};
-    // Check if country code is provided
-    if (options?.country) {
-      options.load.country = options?.country;
-    }
 
     if (options.load.admin1 === undefined) {
       options.load.admin1 = true;
@@ -639,7 +635,7 @@ var geocoder = {
     debug(
       'Initializing local reverse geocoder using dump ' +
         'directory: ' +
-        GEONAMES_DUMP,
+        GEONAMES_DUMP
     );
     // Create local cache folder
     if (!fs.existsSync(GEONAMES_DUMP)) {
@@ -659,7 +655,7 @@ var geocoder = {
               ],
               function () {
                 return waterfallCallback();
-              },
+              }
             );
           },
           // Get GeoNames admin 1 codes
@@ -672,7 +668,7 @@ var geocoder = {
                 ],
                 function () {
                   return waterfallCallback();
-                },
+                }
               );
             } else {
               return setImmediate(waterfallCallback);
@@ -688,7 +684,7 @@ var geocoder = {
                 ],
                 function () {
                   return waterfallCallback();
-                },
+                }
               );
             } else {
               return setImmediate(waterfallCallback);
@@ -704,7 +700,7 @@ var geocoder = {
                 ],
                 function () {
                   return waterfallCallback();
-                },
+                }
               );
             } else {
               return setImmediate(waterfallCallback);
@@ -720,7 +716,7 @@ var geocoder = {
                 ],
                 function () {
                   return waterfallCallback();
-                },
+                }
               );
             } else {
               return setImmediate(waterfallCallback);
@@ -735,7 +731,7 @@ var geocoder = {
           if (callback) {
             return callback();
           }
-        },
+        }
       );
     } else {
       async.parallel(
@@ -754,7 +750,7 @@ var geocoder = {
                   options.countries.length - 1 === index &&
                     function () {
                       return waterfallCallback();
-                    },
+                    }
                 );
               });
             } else {
@@ -770,7 +766,7 @@ var geocoder = {
           if (callback) {
             return callback();
           }
-        },
+        }
       );
     }
   },
@@ -890,7 +886,7 @@ var geocoder = {
                 subResult.name +
                 '"}'
               );
-            }),
+            })
         );
         return innerCallback(null, result);
       };

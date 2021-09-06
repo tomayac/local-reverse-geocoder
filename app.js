@@ -52,7 +52,7 @@ app.listen(port, function () {
   console.log('Local reverse geocoder listening on port ' + port);
   console.log('Initializing Geocoder…');
   console.log(
-    '(This may take a long time and will download ~300MB worth of data.)',
+    '(This may take a long time and will download ~300MB worth of data.)'
   );
   geocoder.init(
     {
@@ -67,6 +67,6 @@ app.listen(port, function () {
     function () {
       console.log('Geocoder initialized and ready.');
       isGeocodeInitialized = true;
-    },
+    }
   );
 });

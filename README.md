@@ -105,7 +105,7 @@ geocoder.init(
   },
   function () {
     // Ready to call lookUp
-  },
+  }
 );
 ```
 
@@ -343,7 +343,7 @@ geocoder.init(
   },
   function () {
     // Ready to call lookUp
-  },
+  }
 );
 ```
 

@@ -41,7 +41,7 @@ var readline = require('readline');
 const { basename } = require('path');
 
 // All data from http://download.geonames.org/export/dump/
-var GEONAMES_URL = 'http://download.geonames.org/export/dump/';
+var GEONAMES_URL = 'https://download.geonames.org/export/dump/';
 
 var CITIES_FILE = 'cities1000';
 var ADMIN_1_CODES_FILE = 'admin1CodesASCII';

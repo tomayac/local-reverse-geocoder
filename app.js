@@ -1,9 +1,12 @@
 'use strict';
 
 var express = require('express');
+var cors = require('cors');
 var app = express();
 var geocoder = require('./index.js');
 var isGeocodeInitialized = false;
+
+app.use(cors());
 
 app.get('/healthcheck', function (req, res) {
   return res.status(200).send('OK');

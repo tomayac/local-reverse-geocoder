@@ -34,6 +34,53 @@ $ docker run -it -e PORT=3000 --rm local-reverse-geocoder
 
 ## Usage in Node.js
 
+### Init
+
+You must initialize the geocoder prior to the first call to `lookUp()`.
+This ensures that all files are loaded into the cache prior to making the first
+call.
+
+```javascript
+var geocoder = require('local-reverse-geocoder');
+
+geocoder.init({}, function () {
+  // geocoder is loaded and ready to run
+});
+```
+
+Optionally `init()` also allows you to specify which files to load data from. This
+reduces initialization time and the runtime memory footprint of the Node.js
+process. By default all files are loaded.
+
+```javascript
+var geocoder = require('local-reverse-geocoder');
+
+geocoder.init(
+  {
+    load: {
+      admin1: true,
+      admin2: false,
+      admin3And4: false,
+      alternateNames: false,
+    },
+  },
+  function () {
+    // Ready to call lookUp
+  }
+);
+```
+
+Optionally `init()` allows you to specify the directory that geonames files are
+downloaded and cached in.
+
+```javascript
+var geocoder = require('local-reverse-geocoder');
+
+geocoder.init({ dumpDirectory: '/tmp/geonames' }, function () {
+  // Ready to call lookUp and all files will be downloaded to /tmp/geonames
+});
+```
+
 ### Look Up
 
 ```javascript
@@ -70,53 +117,6 @@ var points = [
 ];
 geocoder.lookUp(points, maxResults, function (err, res) {
   console.log(JSON.stringify(res, null, 2));
-});
-```
-
-### Init
-
-You can optionally initialize the geocoder prior to the first call to lookUp.
-This ensures that all files are loaded into the cache prior to making the first
-call.
-
-```javascript
-var geocoder = require('local-reverse-geocoder');
-
-geocoder.init({}, function () {
-  // geocoder is loaded and ready to run
-});
-```
-
-Optionally `init` also allows you to specify which files to load data from. This
-reduces initialization time and the runtime memory footprint of the Node.js
-process. By default all files are loaded.
-
-```javascript
-var geocoder = require('local-reverse-geocoder');
-
-geocoder.init(
-  {
-    load: {
-      admin1: true,
-      admin2: false,
-      admin3And4: false,
-      alternateNames: false,
-    },
-  },
-  function () {
-    // Ready to call lookUp
-  }
-);
-```
-
-Optionally `init` allows you to specify the directory that geonames files are
-downloaded and cached in.
-
-```javascript
-var geocoder = require('local-reverse-geocoder');
-
-geocoder.init({ dumpDirectory: '/tmp/geonames' }, function () {
-  // Ready to call lookUp and all files will be downloaded to /tmp/geonames
 });
 ```
 
@@ -370,7 +370,7 @@ on the command line.
 
 ## License
 
-Copyright 2017-2021 Thomas Steiner (tomac@google.com)
+Copyright 2017 Thomas Steiner (tomac@google.com)
 
 Licensed under the Apache License, Version 2.0 (the "License"); you may not use
 this file except in compliance with the License. You may obtain a copy of the

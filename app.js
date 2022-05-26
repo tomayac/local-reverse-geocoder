@@ -59,6 +59,7 @@ app.listen(port, function () {
   );
   geocoder.init(
     {
+      cities_file_override: 'cities500',
       load: {
         admin1: true,
         admin2: true,

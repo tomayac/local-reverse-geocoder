@@ -455,7 +455,7 @@ var geocoder = {
       // fileNameInsideZip
       `${citiesFileOverridden}.txt`,
       // outputFileFolderWithoutSlash
-      GEONAMES_DUMP + '/' + cities_file_overriden,
+      GEONAMES_DUMP + '/' + citiesFileOverridden,
       // downloadMethodBoundToThis
       this._downloadAndExtractFileFromZip.bind(this),
       // callback

@@ -24,10 +24,10 @@
   "author": "Thomas Steiner",
   "license": "Apache-2.0",
   "dependencies": {
-    "async": "^3.2.1",
-    "csv-parse": "^4.16.3",
+    "async": "^3.2.3",
+    "csv-parse": "^5.1.0",
     "cors": "^2.8.5",    
-    "debug": "^4.3.2",
+    "debug": "^4.3.4",
     "kdt": "^0.1.0",
     "request": "^2.88.2",
     "unzip-stream": "^0.3.1"
@@ -45,10 +45,10 @@
     "npm": ">=6.0.0"
   },
   "devDependencies": {
-    "@types/node": "^16.7.10",
-    "express": "^4.17.1",
-    "jsdoc": "^3.6.7",
-    "jshint": "^2.13.1",
-    "prettier": "^2.3.2"
+    "@types/node": "^17.0.35",
+    "express": "^4.18.1",
+    "jsdoc": "^3.6.10",
+    "jshint": "^2.13.4",
+    "prettier": "^2.6.2"
   }
 }

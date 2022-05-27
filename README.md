@@ -72,7 +72,7 @@ geocoder.init(
 ```
 
 Optionally `init()` allows you to specify the directory that geonames files are
-downloaded and cached in, and specific the cities database.
+downloaded and cached in, and a specific cities database to be used.
 
 ```javascript
 var geocoder = require('local-reverse-geocoder');

@@ -106,7 +106,7 @@ var geocoder = {
   _admin4Codes: null,
   _alternateNames: null,
 
-  _cities_file_override: null,
+  _citiesFileOverride: null,
 
   // Distance function taken from
   // http://www.movable-type.co.uk/scripts/latlong.html
@@ -444,16 +444,16 @@ var geocoder = {
   },
 
   _getGeoNamesCitiesData: function (callback) {
-    var cities_file_overriden = this._cities_file_override || CITIES_FILE
+    var citiesFileOverridden = this._citiesFileOverride || CITIES_FILE
     this._getData(
       // dataName
       'cities',
       // baseName
-      cities_file_overriden,
+      citiesFileOverridden,
       // geonamesZipFilename
-      `${cities_file_overriden}.zip`,
+      `${citiesFileOverridden}.zip`,
       // fileNameInsideZip
-      `${cities_file_overriden}.txt`,
+      `${citiesFileOverridden}.txt`,
       // outputFileFolderWithoutSlash
       GEONAMES_DUMP + '/' + cities_file_overriden,
       // downloadMethodBoundToThis
@@ -620,10 +620,10 @@ var geocoder = {
 
     options.load = options.load || {};
 
-    if (CITIES_FILES.indexOf(options.cities_file_override) > -1) {
+    if (CITIES_FILES.indexOf(options.citiesFileOverride) > -1) {
       // valid city file
-      this._cities_file_override = options.cities_file_override
-      debug(`Using ${options.cities_file_override} as override of cities database`);
+      this._citiesFileOverride = options.citiesFileOverride;
+      debug(`Using ${options.citiesFileOverride} as override of cities database`);
     }
 
     if (options.load.admin1 === undefined) {

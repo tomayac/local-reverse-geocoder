@@ -69,6 +69,12 @@ app.listen(port, function () {
     },
     function () {
       console.log('Geocoder initialized and ready.');
+      console.log('Endpoints:');
+      console.log(`- http://localhost:${port}/healthcheck`);
+      console.log(`- http://localhost:${port}/deep-healthcheck`);
+      console.log(`- http://localhost:${port}/geocode`);
+      console.log('Examples:');
+      console.log(`- http://localhost:${port}/geocode?latitude=54.6875248&longitude=9.7617254`);
       isGeocodeInitialized = true;
     }
   );

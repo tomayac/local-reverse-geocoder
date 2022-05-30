@@ -75,7 +75,9 @@ app.listen(port, function () {
       console.log(`- http://localhost:${port}/deep-healthcheck`);
       console.log(`- http://localhost:${port}/geocode`);
       console.log('Examples:');
-      console.log(`- http://localhost:${port}/geocode?latitude=54.6875248&longitude=9.7617254`);
+      console.log(
+        `- http://localhost:${port}/geocode?latitude=54.6875248&longitude=9.7617254`
+      );
       isGeocodeInitialized = true;
     }
   );

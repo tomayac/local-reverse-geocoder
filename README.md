@@ -36,9 +36,8 @@ $ docker run -it -e PORT=3000 --rm local-reverse-geocoder
 
 ### Init
 
-You must initialize the geocoder prior to the first call to `lookUp()`.
-This ensures that all files are loaded into the cache prior to making the first
-call.
+You must initialize the geocoder prior to the first call to `lookUp()`. This
+ensures that all files are loaded into the cache prior to making the first call.
 
 ```javascript
 var geocoder = require('local-reverse-geocoder');
@@ -48,8 +47,8 @@ geocoder.init({}, function () {
 });
 ```
 
-Optionally `init()` also allows you to specify which files to load data from. This
-reduces initialization time and the runtime memory footprint of the Node.js
+Optionally `init()` also allows you to specify which files to load data from.
+This reduces initialization time and the runtime memory footprint of the Node.js
 process. By default all files are loaded.
 
 ```javascript

@@ -445,7 +445,7 @@ var geocoder = {
   },
 
   _getGeoNamesCitiesData: function (callback) {
-    var citiesFileOverridden = this._citiesFileOverride || CITIES_FILE
+    var citiesFileOverridden = this._citiesFileOverride || CITIES_FILE;
     this._getData(
       // dataName
       'cities',
@@ -624,7 +624,9 @@ var geocoder = {
     if (CITIES_FILES.indexOf(options.citiesFileOverride) > -1) {
       // valid city file
       this._citiesFileOverride = options.citiesFileOverride;
-      debug(`Using ${options.citiesFileOverride} as override of cities database`);
+      debug(
+        `Using ${options.citiesFileOverride} as override of cities database`
+      );
     }
 
     if (options.load.admin1 === undefined) {

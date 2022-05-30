@@ -44,6 +44,7 @@ const { basename } = require('path');
 // All data from http://download.geonames.org/export/dump/
 var GEONAMES_URL = 'https://download.geonames.org/export/dump/';
 
+var CITIES_FILES = ['cities500', 'cities1000', 'cities5000', 'cities15000'];
 var CITIES_FILE = 'cities1000';
 var ADMIN_1_CODES_FILE = 'admin1CodesASCII';
 var ADMIN_2_CODES_FILE = 'admin2Codes';
@@ -105,6 +106,8 @@ var geocoder = {
   _admin3Codes: null,
   _admin4Codes: null,
   _alternateNames: null,
+
+  _citiesFileOverride: null,
 
   // Distance function taken from
   // http://www.movable-type.co.uk/scripts/latlong.html
@@ -442,17 +445,18 @@ var geocoder = {
   },
 
   _getGeoNamesCitiesData: function (callback) {
+    var citiesFileOverridden = this._citiesFileOverride || CITIES_FILE
     this._getData(
       // dataName
       'cities',
       // baseName
-      CITIES_FILE,
+      citiesFileOverridden,
       // geonamesZipFilename
-      `${CITIES_FILE}.zip`,
+      `${citiesFileOverridden}.zip`,
       // fileNameInsideZip
-      `${CITIES_FILE}.txt`,
+      `${citiesFileOverridden}.txt`,
       // outputFileFolderWithoutSlash
-      GEONAMES_DUMP + '/cities',
+      GEONAMES_DUMP + '/' + citiesFileOverridden,
       // downloadMethodBoundToThis
       this._downloadAndExtractFileFromZip.bind(this),
       // callback
@@ -616,6 +620,12 @@ var geocoder = {
     }
 
     options.load = options.load || {};
+
+    if (CITIES_FILES.indexOf(options.citiesFileOverride) > -1) {
+      // valid city file
+      this._citiesFileOverride = options.citiesFileOverride;
+      debug(`Using ${options.citiesFileOverride} as override of cities database`);
+    }
 
     if (options.load.admin1 === undefined) {
       options.load.admin1 = true;

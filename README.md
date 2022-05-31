@@ -56,7 +56,7 @@ var geocoder = require('local-reverse-geocoder');
 
 geocoder.init(
   {
-    cities_file_override: 'cities500', // one of 'cities500', 'cities1000', 'cities5000', 'cities15000' or null to keep the default city database (cities1000)
+    citiesFileOverride: 'cities500', // one of 'cities500', 'cities1000', 'cities5000', 'cities15000' or null to keep the default city database (cities1000)
     load: {
       admin1: true,
       admin2: false,

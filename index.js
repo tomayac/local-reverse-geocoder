@@ -645,6 +645,10 @@ var geocoder = {
       options.load.alternateNames = true;
     }
 
+    if (options.countries === undefined) {
+      options.countries = [];
+    }
+
     debug(
       'Initializing local reverse geocoder using dump ' +
         'directory: ' +

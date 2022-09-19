@@ -25,7 +25,7 @@
   "license": "Apache-2.0",
   "dependencies": {
     "async": "^3.2.4",
-    "csv-parse": "^5.1.0",
+    "csv-parse": "^5.3.0",
     "cors": "^2.8.5",
     "debug": "^4.3.4",
     "kdt": "^0.1.0",
@@ -45,10 +45,10 @@
     "npm": ">=6.0.0"
   },
   "devDependencies": {
-    "@types/node": "^17.0.40",
+    "@types/node": "^18.7.18",
     "express": "^4.18.1",
-    "jsdoc": "^3.6.10",
-    "jshint": "^2.13.4",
-    "prettier": "^2.6.2"
+    "jsdoc": "^3.6.11",
+    "jshint": "^2.13.5",
+    "prettier": "^2.7.1"
   }
 }

@@ -448,7 +448,7 @@ var geocoder = {
     var citiesFileOverridden = this._citiesFileOverride || CITIES_FILE;
     this._getData(
       // dataName
-      'cities',
+      citiesFileOverridden,
       // baseName
       citiesFileOverridden,
       // geonamesZipFilename

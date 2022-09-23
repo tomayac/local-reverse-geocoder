@@ -42,6 +42,8 @@ export interface InitLoadOptions {
 export interface InitOptions {
   dumpDirectory?: string;
   load?: InitLoadOptions;
+  citiesFileOverride?: string;
+  countries?: string[];
 }
 
 declare const _default: {

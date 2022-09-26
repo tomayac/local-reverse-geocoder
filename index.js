@@ -818,8 +818,14 @@ var geocoder = {
     var functions = [];
     points.forEach(function (point, i) {
       point = {
-        latitude: parseFloat(point.latitude),
-        longitude: parseFloat(point.longitude),
+        latitude:
+          typeof point.latitude === 'number'
+            ? point.latitude
+            : parseFloat(point.latitude),
+        longitude:
+          typeof point.longitude === 'number'
+            ? point.longitude
+            : parseFloat(point.longitude),
       };
       debug('Look-up request for point ' + JSON.stringify(point));
       functions[i] = function (innerCallback) {

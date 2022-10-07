@@ -670,8 +670,8 @@ var geocoder = {
                 that._getGeoNamesCitiesData.bind(that),
                 that._parseGeoNamesCitiesCsv.bind(that),
               ],
-              function () {
-                return waterfallCallback();
+              function (err) {
+                return waterfallCallback(err);
               }
             );
           },
@@ -683,8 +683,8 @@ var geocoder = {
                   that._getGeoNamesAdmin1CodesData.bind(that),
                   that._parseGeoNamesAdmin1CodesCsv.bind(that),
                 ],
-                function () {
-                  return waterfallCallback();
+                function (err) {
+                  return waterfallCallback(err);
                 }
               );
             } else {
@@ -699,8 +699,8 @@ var geocoder = {
                   that._getGeoNamesAdmin2CodesData.bind(that),
                   that._parseGeoNamesAdmin2CodesCsv.bind(that),
                 ],
-                function () {
-                  return waterfallCallback();
+                function (err) {
+                  return waterfallCallback(err);
                 }
               );
             } else {
@@ -715,8 +715,8 @@ var geocoder = {
                   that._getGeoNamesAllCountriesData.bind(that),
                   that._parseGeoNamesAllCountriesCsv.bind(that),
                 ],
-                function () {
-                  return waterfallCallback();
+                function (err) {
+                  return waterfallCallback(err);
                 }
               );
             } else {
@@ -731,8 +731,8 @@ var geocoder = {
                   that._getGeoNamesAlternateNamesData.bind(that),
                   that._parseGeoNamesAlternateNamesCsv.bind(that),
                 ],
-                function () {
-                  return waterfallCallback();
+                function (err) {
+                  return waterfallCallback(err);
                 }
               );
             } else {

@@ -8,7 +8,8 @@
     "lint": "jshint --exclude ./node_modules,./docs/scripts .",
     "start": "node --max-old-space-size=4096 app.js",
     "build": "jsdoc -d docs index.js",
-    "prettier": "prettier --write *.{js,md,json}"
+    "prettier": "prettier --write *.{js,md,json}",
+    "postinstall": "node --max-old-space-size=4096 postinstall.js"
   },
   "keywords": [
     "geocoding",

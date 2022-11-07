@@ -325,9 +325,9 @@ of disk space). All follow-up requests are lightning fast.
 
 To reduce the time taken to initialize the data, you can manually configure it
 to only download a specific set of countries from Geonames. Do note that when
-you add a country code into the array, it will disable geocoder from downloading
+you add a country code into the array, it will disable the geocoder from downloading
 all ~2GB(!) worth of data and only load the specified countries' data. If you
-want to re-enable geocoder to download all data, the countries array needs to be
+want to re-enable the geocoder to download all data, the countries array needs to be
 empty.
 
 #### Example of getting data for individual country
@@ -355,13 +355,13 @@ geocoder.init(
 
 There's also the option of downloading the Geonames files via a post-install
 script.  
-The script is invoked automatically after installation but won't download any
+The script is invoked automatically after installation, but won't download any
 files without getting at least one of the init options in an env variable.  
-The options should be specific with a `GEOCODER_POSTINSTALL_` prefix.
+The options should be specified with a `GEOCODER_POSTINSTALL_` prefix.
 
 #### Example of downloading the files via the post-install script
 
-```javascript
+```js
 export GEOCODER_POSTINSTALL_ADMIN1=true
 export GEOCODER_POSTINSTALL_ADMIN2=true
 export GEOCODER_POSTINSTALL_COUNTRIES=SG,AU

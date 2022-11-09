@@ -1,6 +1,6 @@
 {
   "name": "local-reverse-geocoder",
-  "version": "0.12.5",
+  "version": "0.12.6",
   "description": "Implements a local reverse geocoder based on GeoNames.",
   "main": "index.js",
   "types": "index.d.ts",
@@ -8,7 +8,8 @@
     "lint": "jshint --exclude ./node_modules,./docs/scripts .",
     "start": "node --max-old-space-size=4096 app.js",
     "build": "jsdoc -d docs index.js",
-    "prettier": "prettier --write *.{js,md,json}"
+    "prettier": "prettier --write *.{js,md,json}",
+    "postinstall": "node --max-old-space-size=4096 postinstall.js"
   },
   "keywords": [
     "geocoding",

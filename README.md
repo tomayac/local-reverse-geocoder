@@ -362,6 +362,7 @@ The options should be specified with a `GEOCODER_POSTINSTALL_` prefix.
 #### Example of downloading the files via the post-install script
 
 ```js
+export GEOCODER_POSTINSTALL_DUMP_DIRECTORY=/usr/src/app
 export GEOCODER_POSTINSTALL_ADMIN1=true
 export GEOCODER_POSTINSTALL_ADMIN2=true
 export GEOCODER_POSTINSTALL_COUNTRIES=SG,AU

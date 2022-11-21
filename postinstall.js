@@ -30,6 +30,7 @@ try {
   console.info('[local-reverse-geocoder] post-install: Starting.');
   geocoder.init(
     {
+      dumpDirectory: GEOCODER_POSTINSTALL_DUMP_DIRECTORY,
       citiesFileOverride: GEOCODER_POSTINSTALL_CITIES_FILE_OVERRIDE,
       load: {
         admin1: GEOCODER_POSTINSTALL_ADMIN1?.toLowerCase() === 'true',

@@ -19,6 +19,7 @@
   ],
   "files": [
     "app.js",
+    "postinstall.js",
     "index.js",
     "index.d.ts"
   ],

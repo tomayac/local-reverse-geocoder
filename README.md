@@ -325,10 +325,10 @@ of disk space). All follow-up requests are lightning fast.
 
 To reduce the time taken to initialize the data, you can manually configure it
 to only download a specific set of countries from Geonames. Do note that when
-you add a country code into the array, it will disable the geocoder from downloading
-all ~2GB(!) worth of data and only load the specified countries' data. If you
-want to re-enable the geocoder to download all data, the countries array needs to be
-empty.
+you add a country code into the array, it will disable the geocoder from
+downloading all ~2GB(!) worth of data and only load the specified countries'
+data. If you want to re-enable the geocoder to download all data, the countries
+array needs to be empty.
 
 #### Example of getting data for individual country
 

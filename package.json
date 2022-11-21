@@ -22,8 +22,8 @@
     "debug": "^4.0.1",
     "express": "^4.16.3",
     "kdt": "^0.1.0",
-    "request": "^2.88.0",
-    "node-unzip-2": "^0.2.7"
+    "node-unzip-2": "^0.2.7",
+    "request": "^2.88.0"
   },
   "repository": {
     "type": "git",
@@ -39,6 +39,6 @@
   },
   "devDependencies": {
     "jsdoc": "~3.6.3",
-    "jshint": "~2.10.2"
+    "jshint": "^2.13.3"
   }
 }

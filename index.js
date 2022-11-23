@@ -50,7 +50,6 @@ var ADMIN_1_CODES_FILE = 'admin1CodesASCII';
 var ADMIN_2_CODES_FILE = 'admin2Codes';
 var ALL_COUNTRIES_FILE = 'allCountries';
 var ALTERNATE_NAMES_FILE = 'alternateNames';
-var COUNTRY_CODE = '';
 
 /* jshint maxlen: false */
 var GEONAMES_COLUMNS = [
@@ -512,7 +511,7 @@ var geocoder = {
   },
 
   _parseGeoNamesCountryCsv: function (pathToCsv, callback) {
-    debug('Started parsing cities.txt (this  may take a while)');
+    debug('Started parsing country file (this may take a while)');
     var data = [];
     var lenI = GEONAMES_COLUMNS.length;
     var that = this;
@@ -530,16 +529,11 @@ var geocoder = {
         data.push(lineObj);
       });
 
-      debug('Finished parsing cities.txt');
-      debug('Started building cities k-d tree (this may take a while)');
-      var dimensions = ['latitude', 'longitude'];
-      that._kdTree = kdTree.createKdTree(data, that._distanceFunc, dimensions);
-      debug('Finished building cities k-d tree');
-      return callback();
+      return callback(null, data);
     });
   },
 
-  _getGeoNamesCountriesData: function (callback) {
+  _getGeoNamesCountriesData: function (COUNTRY_CODE, callback) {
     this._getData(
       // dataName
       COUNTRY_CODE,
@@ -752,34 +746,39 @@ var geocoder = {
       );
     } else {
       async.parallel(
-        [
-          // Get GeoNames of specific countries
-          function (waterfallCallback) {
-            if (options.countries.length > 0) {
-              options.countries.map((country, index) => {
-                COUNTRY_CODE = country;
-                async.waterfall(
-                  [
-                    that._getGeoNamesCountriesData.bind(that),
-                    that._parseGeoNamesCountryCsv.bind(that),
-                  ],
-
-                  options.countries.length - 1 === index &&
-                    function () {
-                      return waterfallCallback();
-                    }
-                );
-              });
-            } else {
-              return setImmediate(waterfallCallback);
+        // Get GeoNames of specific countries
+        options.countries.map(
+          (country) =>
+            function (parallelCb) {
+              async.waterfall(
+                [
+                  (cb) =>
+                    that._getGeoNamesCountriesData.bind(that)(country, cb),
+                  (pathToCsv, cb) =>
+                    that._parseGeoNamesCountryCsv.bind(that)(pathToCsv, cb),
+                ],
+                parallelCb
+              );
             }
-          },
-        ],
+        ),
         // Main callback
-        function (err) {
+        function (err, countriesData) {
           if (err) {
             throw err;
           }
+
+          debug('Finished parsing countries files');
+          debug(
+            'Started building k-d tree for specific countries (this may take a while)'
+          );
+          var dimensions = ['latitude', 'longitude'];
+          that._kdTree = kdTree.createKdTree(
+            countriesData.flat(),
+            that._distanceFunc,
+            dimensions
+          );
+          debug('Finished building k-d tree for specific countries');
+
           if (callback) {
             return callback();
           }

@@ -9,11 +9,11 @@ jobs:
         uses: actions/checkout@v3
       - name: Build an image from Dockerfile
         run: |
-          docker build -t arculix/geoip:${{ github.sha }} .
+          docker build -t arculix/geocoder:${{ github.sha }} .
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: "arculix/geoip:${{ github.sha }}"
+          image-ref: "arculix/geocoder:${{ github.sha }}"
           format: "table"
           exit-code: "1"
           ignore-unfixed: true

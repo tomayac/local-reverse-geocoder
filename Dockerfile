@@ -2,6 +2,8 @@ FROM node:18-alpine
 
 WORKDIR /app
 
+ARG PORT=3021
+
 RUN apk add --no-cache curl && \
   addgroup --gid 2000 arculix && \
   adduser --uid 2000 -G arculix -D arculix

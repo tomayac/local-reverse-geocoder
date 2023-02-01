@@ -29,5 +29,6 @@ RUN chown -R arculix:arculix /app
 
 USER arculix
 
-EXPOSE 3000
+EXPOSE $PORT
 CMD [ "npm", "start"]
+HEALTHCHECK --interval=30s --timeout=30s --start-period=30s --retries=10 CMD netstat -an | grep $PORT > /dev/null; if [ 0 != $? ]; then exit 1; fi;

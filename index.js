@@ -39,6 +39,8 @@ var request = require('request');
 var unzip = require('unzip-stream');
 var async = require('async');
 var readline = require('readline');
+var os = require("os");
+const tempDir = os.tmpdir();
 const { basename } = require('path');
 
 // All data from http://download.geonames.org/export/dump/
@@ -184,7 +186,7 @@ var geocoder = {
   ) {
     const geonamesUrl = `${GEONAMES_URL}${geonamesZipFilename}`;
     const outputFilePath = `${outputFileFolderWithoutSlash}/${outputFileName}`;
-
+    const tempFilePath = `${tempDir}/${outputFileName}`;
     debug(
       `Getting GeoNames ${dataName} data from ${geonamesUrl} (this may take a while)`
     );
@@ -206,7 +208,7 @@ var geocoder = {
           );
         }
       })
-      .pipe(fs.createWriteStream(outputFilePath))
+      .pipe(fs.createWriteStream(tempFilePath))
       .on('finish', () => {
         debug(`Downloaded GeoNames ${dataName} data`);
         this._housekeepingSync(outputFileFolderWithoutSlash, outputFileName);
@@ -224,6 +226,7 @@ var geocoder = {
   ) {
     const geonamesUrl = `${GEONAMES_URL}${geonamesZipFilename}`;
     const outputFilePath = `${outputFileFolderWithoutSlash}/${outputFileName}`;
+    const tempFilePath = `${tempDir}/${outputFileName}`;
 
     debug(
       `Getting GeoNames ${dataName} data from ${geonamesUrl} (this may take a while)`
@@ -256,7 +259,7 @@ var geocoder = {
               (typeof entrySize === 'number' ? ` (${entrySize} B)` : '')
           );
           foundFiles++;
-          entry.pipe(fs.createWriteStream(outputFilePath)).on('finish', () => {
+          entry.pipe(fs.createWriteStream(tempFilePath)).on('finish', () => {
             debug(`- unzipped GeoNames ${dataName} data - ${entryPath}`);
             this._housekeepingSync(
               outputFileFolderWithoutSlash,
@@ -291,11 +294,15 @@ var geocoder = {
   },
 
   _housekeepingSync: function (outputFileFolderWithoutSlash, outputFileName) {
-    fs.readdirSync(outputFileFolderWithoutSlash).forEach((foundFile) => {
-      if (foundFile !== outputFileName) {
-        fs.unlinkSync(`${outputFileFolderWithoutSlash}/${foundFile}`);
-      }
-    });
+    const tempFilePath = `${tempDir}/${outputFileName}`;
+    if (fs.existsSync(tempFilePath)) {
+      fs.renameSync(tempFilePath, `${outputFileFolderWithoutSlash}/${outputFileName}`);
+      fs.readdirSync(outputFileFolderWithoutSlash).forEach((foundFile) => {
+        if (foundFile !== outputFileName) {
+          fs.unlinkSync(`${outputFileFolderWithoutSlash}/${foundFile}`);
+        }
+      });
+    }
   },
 
   _getGeoNamesAlternateNamesData: function (callback) {

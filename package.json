@@ -6,7 +6,7 @@
   "types": "index.d.ts",
   "scripts": {
     "lint": "jshint --exclude ./node_modules,./docs/scripts .",
-    "start": "node --max-old-space-size=4096 app.js",
+    "start": "node --max-old-space-size=4095 app.js",
     "build": "jsdoc -d docs index.js",
     "prettier": "prettier --write *.{js,md,json}",
     "postinstall": "node --max-old-space-size=4096 postinstall.js"

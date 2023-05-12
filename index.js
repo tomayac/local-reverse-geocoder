@@ -836,7 +836,10 @@ var geocoder = {
       debug('Look-up request for point ' + JSON.stringify(point));
       functions[i] = function (innerCallback) {
         var result = that._kdTree.nearest(point, maxResults);
-        result.reverse();
+        // Sort by distance
+        result.sort(function(a, b) {
+          return a[1] - b[1];
+        });
         for (var j = 0, lenJ = result.length; j < lenJ; j++) {
           if (result && result[j] && result[j][0]) {
             var countryCode = result[j][0].countryCode || '';

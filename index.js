@@ -39,8 +39,6 @@ var request = require('request');
 var unzip = require('unzip-stream');
 var async = require('async');
 var readline = require('readline');
-var os = require("os");
-const tempDir = os.tmpdir();
 const { basename } = require('path');
 
 // All data from http://download.geonames.org/export/dump/
@@ -186,7 +184,7 @@ var geocoder = {
   ) {
     const geonamesUrl = `${GEONAMES_URL}${geonamesZipFilename}`;
     const outputFilePath = `${outputFileFolderWithoutSlash}/${outputFileName}`;
-    const tempFilePath = `${tempDir}/${outputFileName}`;
+    const tempFilePath = `${outputFileFolderWithoutSlash}/temp-${outputFileName}`;
     debug(
       `Getting GeoNames ${dataName} data from ${geonamesUrl} (this may take a while)`
     );
@@ -226,7 +224,7 @@ var geocoder = {
   ) {
     const geonamesUrl = `${GEONAMES_URL}${geonamesZipFilename}`;
     const outputFilePath = `${outputFileFolderWithoutSlash}/${outputFileName}`;
-    const tempFilePath = `${tempDir}/${outputFileName}`;
+    const tempFilePath = `${outputFileFolderWithoutSlash}/temp-${outputFileName}`;
 
     debug(
       `Getting GeoNames ${dataName} data from ${geonamesUrl} (this may take a while)`
@@ -294,7 +292,7 @@ var geocoder = {
   },
 
   _housekeepingSync: function (outputFileFolderWithoutSlash, outputFileName) {
-    const tempFilePath = `${tempDir}/${outputFileName}`;
+    const tempFilePath = `${outputFileFolderWithoutSlash}/temp-${outputFileName}`;
     if (fs.existsSync(tempFilePath)) {
       fs.renameSync(tempFilePath, `${outputFileFolderWithoutSlash}/${outputFileName}`);
       fs.readdirSync(outputFileFolderWithoutSlash).forEach((foundFile) => {

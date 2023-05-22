@@ -63,11 +63,13 @@ var path = require('path');
 var parser = require('csv-parse');
 var parse = parser.parse;
 var kdTree = require('kdt');
-var request = require('request');
 var unzip = require('unzip-stream');
 var async = require('async');
 var readline = require('readline');
+var os = require('os');
+const tempDir = os.tmpdir();
 const { basename } = require('path');
+var { got } = require('got-cjs');
 
 // All data from http://download.geonames.org/export/dump/
 var GEONAMES_URL = 'https://download.geonames.org/export/dump/';
@@ -78,7 +80,6 @@ var ADMIN_1_CODES_FILE = 'admin1CodesASCII';
 var ADMIN_2_CODES_FILE = 'admin2Codes';
 var ALL_COUNTRIES_FILE = 'allCountries';
 var ALTERNATE_NAMES_FILE = 'alternateNames';
-var COUNTRY_CODE = '';
 
 /* jshint maxlen: false */
 var GEONAMES_COLUMNS = [
@@ -213,14 +214,13 @@ var geocoder = {
   ) {
     const geonamesUrl = `${GEONAMES_URL}${geonamesZipFilename}`;
     const outputFilePath = `${outputFileFolderWithoutSlash}/${outputFileName}`;
-
+    const tempFilePath = `${tempDir}/${outputFileName}`;
     debug(
       `Getting GeoNames ${dataName} data from ${geonamesUrl} (this may take a while)`
     );
 
-    request({
+    got.stream({
       url: geonamesUrl,
-      encoding: null,
     })
       .on('error', (err) => {
         callback(
@@ -235,7 +235,7 @@ var geocoder = {
           );
         }
       })
-      .pipe(fs.createWriteStream(outputFilePath))
+      .pipe(fs.createWriteStream(tempFilePath))
       .on('finish', () => {
         debug(`Downloaded GeoNames ${dataName} data`);
         this._housekeepingSync(outputFileFolderWithoutSlash, outputFileName);
@@ -253,15 +253,15 @@ var geocoder = {
   ) {
     const geonamesUrl = `${GEONAMES_URL}${geonamesZipFilename}`;
     const outputFilePath = `${outputFileFolderWithoutSlash}/${outputFileName}`;
+    const tempFilePath = `${tempDir}/${outputFileName}`;
 
     debug(
       `Getting GeoNames ${dataName} data from ${geonamesUrl} (this may take a while)`
     );
 
     let foundFiles = 0;
-    request({
+    got.stream({
       url: geonamesUrl,
-      encoding: null,
     })
       .on('error', (err) => {
         callback(
@@ -285,7 +285,7 @@ var geocoder = {
               (typeof entrySize === 'number' ? ` (${entrySize} B)` : '')
           );
           foundFiles++;
-          entry.pipe(fs.createWriteStream(outputFilePath)).on('finish', () => {
+          entry.pipe(fs.createWriteStream(tempFilePath)).on('finish', () => {
             debug(`- unzipped GeoNames ${dataName} data - ${entryPath}`);
             this._housekeepingSync(
               outputFileFolderWithoutSlash,
@@ -320,11 +320,15 @@ var geocoder = {
   },
 
   _housekeepingSync: function (outputFileFolderWithoutSlash, outputFileName) {
-    fs.readdirSync(outputFileFolderWithoutSlash).forEach((foundFile) => {
-      if (foundFile !== outputFileName) {
-        fs.unlinkSync(`${outputFileFolderWithoutSlash}/${foundFile}`);
-      }
-    });
+    const tempFilePath = `${tempDir}/${outputFileName}`;
+    if (fs.existsSync(tempFilePath)) {
+      fs.renameSync(tempFilePath, `${outputFileFolderWithoutSlash}/${outputFileName}`);
+      fs.readdirSync(outputFileFolderWithoutSlash).forEach((foundFile) => {
+        if (foundFile !== outputFileName) {
+          fs.unlinkSync(`${outputFileFolderWithoutSlash}/${foundFile}`);
+        }
+      });
+    }
   },
 
   _getGeoNamesAlternateNamesData: function (callback) {
@@ -540,7 +544,7 @@ var geocoder = {
   },
 
   _parseGeoNamesCountryCsv: function (pathToCsv, callback) {
-    debug('Started parsing cities.txt (this  may take a while)');
+    debug('Started parsing country file (this may take a while)');
     var data = [];
     var lenI = GEONAMES_COLUMNS.length;
     var that = this;
@@ -558,16 +562,11 @@ var geocoder = {
         data.push(lineObj);
       });
 
-      debug('Finished parsing cities.txt');
-      debug('Started building cities k-d tree (this may take a while)');
-      var dimensions = ['latitude', 'longitude'];
-      that._kdTree = kdTree.createKdTree(data, that._distanceFunc, dimensions);
-      debug('Finished building cities k-d tree');
-      return callback();
+      return callback(null, data);
     });
   },
 
-  _getGeoNamesCountriesData: function (callback) {
+  _getGeoNamesCountriesData: function (COUNTRY_CODE, callback) {
     this._getData(
       // dataName
       COUNTRY_CODE,
@@ -780,34 +779,39 @@ var geocoder = {
       );
     } else {
       async.parallel(
-        [
-          // Get GeoNames of specific countries
-          function (waterfallCallback) {
-            if (options.countries.length > 0) {
-              options.countries.map((country, index) => {
-                COUNTRY_CODE = country;
-                async.waterfall(
-                  [
-                    that._getGeoNamesCountriesData.bind(that),
-                    that._parseGeoNamesCountryCsv.bind(that),
-                  ],
-
-                  options.countries.length - 1 === index &amp;&amp;
-                    function () {
-                      return waterfallCallback();
-                    }
-                );
-              });
-            } else {
-              return setImmediate(waterfallCallback);
+        // Get GeoNames of specific countries
+        options.countries.map(
+          (country) =>
+            function (parallelCb) {
+              async.waterfall(
+                [
+                  (cb) =>
+                    that._getGeoNamesCountriesData.bind(that)(country, cb),
+                  (pathToCsv, cb) =>
+                    that._parseGeoNamesCountryCsv.bind(that)(pathToCsv, cb),
+                ],
+                parallelCb
+              );
             }
-          },
-        ],
+        ),
         // Main callback
-        function (err) {
+        function (err, countriesData) {
           if (err) {
             throw err;
           }
+
+          debug('Finished parsing countries files');
+          debug(
+            'Started building k-d tree for specific countries (this may take a while)'
+          );
+          var dimensions = ['latitude', 'longitude'];
+          that._kdTree = kdTree.createKdTree(
+            countriesData.flat(),
+            that._distanceFunc,
+            dimensions
+          );
+          debug('Finished building k-d tree for specific countries');
+
           if (callback) {
             return callback();
           }
@@ -858,7 +862,10 @@ var geocoder = {
       debug('Look-up request for point ' + JSON.stringify(point));
       functions[i] = function (innerCallback) {
         var result = that._kdTree.nearest(point, maxResults);
-        result.reverse();
+        // Sort by distance
+        result.sort(function(a, b) {
+          return a[1] - b[1];
+        });
         for (var j = 0, lenJ = result.length; j &lt; lenJ; j++) {
           if (result &amp;&amp; result[j] &amp;&amp; result[j][0]) {
             var countryCode = result[j][0].countryCode || '';
@@ -966,7 +973,7 @@ module.exports = geocoder;
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.0</a> on Mon Nov 21 2022 10:21:09 GMT+0100 (Central European Standard Time)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.2</a> on Mon May 22 2023 13:34:06 GMT+0700 (Western Indonesia Time)
 </footer>
 
 <script> prettyPrint(); </script>

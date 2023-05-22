@@ -35,13 +35,13 @@ var path = require('path');
 var parser = require('csv-parse');
 var parse = parser.parse;
 var kdTree = require('kdt');
-var request = require('request');
 var unzip = require('unzip-stream');
 var async = require('async');
 var readline = require('readline');
-var os = require("os");
+var os = require('os');
 const tempDir = os.tmpdir();
 const { basename } = require('path');
+var { got } = require('got-cjs');
 
 // All data from http://download.geonames.org/export/dump/
 var GEONAMES_URL = 'https://download.geonames.org/export/dump/';
@@ -191,9 +191,8 @@ var geocoder = {
       `Getting GeoNames ${dataName} data from ${geonamesUrl} (this may take a while)`
     );
 
-    request({
+    got.stream({
       url: geonamesUrl,
-      encoding: null,
     })
       .on('error', (err) => {
         callback(
@@ -233,9 +232,8 @@ var geocoder = {
     );
 
     let foundFiles = 0;
-    request({
+    got.stream({
       url: geonamesUrl,
-      encoding: null,
     })
       .on('error', (err) => {
         callback(

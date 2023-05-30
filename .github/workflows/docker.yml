@@ -4,8 +4,8 @@ name: Create and publish a Docker image
 
 on:
   push:
-    tags:
-      - '*.*.*'
+    branches:
+      - 'main'
   pull_request:
 
 env:

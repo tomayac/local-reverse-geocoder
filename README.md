@@ -25,12 +25,19 @@ $ yarn add local-reverse-geocoder
 For usage with [Docker](https://www.docker.com/), a Dockerfile is available in
 this project. It caches all the required files from GeoNames.
 
-To use it:
+To build and run it:
 
 ```bash
 $ docker build -t local-reverse-geocoder .
 $ docker run -it -e PORT=3000 --rm local-reverse-geocoder
 ```
+
+Or pull and run it:
+
+```bash
+$ docker run -it -e PORT=3000 --rm ghcr.io/tomayac/local-reverse-geocoder
+```
+
 
 ## Usage in Node.js
 

@@ -30,7 +30,7 @@
     "csv-parse": "^5.4.0",
     "debug": "^4.3.4",
     "kdt": "^0.1.0",
-    "request": "^2.88.2",
+    "node-fetch": "^2.6.11",
     "unzip-stream": "^0.3.1"
   },
   "repository": {

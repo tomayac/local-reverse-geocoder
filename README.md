@@ -38,7 +38,6 @@ Or pull and run it:
 $ docker run -it -e PORT=3000 --rm ghcr.io/tomayac/local-reverse-geocoder
 ```
 
-
 ## Usage in Node.js
 
 ### Init

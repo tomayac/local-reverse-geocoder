@@ -417,7 +417,7 @@ specific language governing permissions and limitations under the License.
 ## Acknowledgements
 
 This project was inspired by Richard Penman's Python
-[reverse geocoder](https://bitbucket.org/richardpenman/reverse_geocode/). It
+[reverse geocoder](https://github.com/richardpenman/reverse_geocode/). It
 uses Ubilabs'
 [k-d-tree implementation](https://github.com/ubilabs/kd-tree-javascript) that
 was ported to Node.js by [Luke Arduini](https://github.com/luk-/node-kdt).

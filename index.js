@@ -35,7 +35,7 @@ var path = require('path');
 var parser = require('csv-parse');
 var parse = parser.parse;
 var kdTree = require('kdt');
-var request = require('request');
+var fetch = require('node-fetch');
 var unzip = require('unzip-stream');
 var async = require('async');
 var readline = require('readline');
@@ -189,28 +189,33 @@ var geocoder = {
       `Getting GeoNames ${dataName} data from ${geonamesUrl} (this may take a while)`
     );
 
-    request({
-      url: geonamesUrl,
-      encoding: null,
-    })
-      .on('error', (err) => {
-        callback(
-          `Error downloading GeoNames ${dataName} data` +
-            (err ? ': ' + err : '')
-        );
-      })
-      .on('response', (response) => {
-        if (response.statusCode !== 200) {
-          callback(
-            `Error downloading GeoNames ${dataName} data (response ${response.statusCode} for url ${geonamesUrl})`
+    fetch(geonamesUrl)
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(
+            `Error downloading GeoNames ${dataName} data (response ${response.status} for url ${geonamesUrl})`
           );
         }
+
+        response.body
+          .on('error', (err) => {
+            throw new Error(
+              `Error downloading GeoNames ${dataName} data` +
+                (err ? ': ' + err : '')
+            );
+          })
+          .pipe(fs.createWriteStream(tempFilePath))
+          .on('finish', () => {
+            debug(`Downloaded GeoNames ${dataName} data`);
+            this._housekeepingSync(
+              outputFileFolderWithoutSlash,
+              outputFileName
+            );
+            return callback(null, outputFilePath);
+          });
       })
-      .pipe(fs.createWriteStream(tempFilePath))
-      .on('finish', () => {
-        debug(`Downloaded GeoNames ${dataName} data`);
-        this._housekeepingSync(outputFileFolderWithoutSlash, outputFileName);
-        return callback(null, outputFilePath);
+      .catch((err) => {
+        callback(err);
       });
   },
 
@@ -231,70 +236,80 @@ var geocoder = {
     );
 
     let foundFiles = 0;
-    request({
-      url: geonamesUrl,
-      encoding: null,
-    })
-      .on('error', (err) => {
-        callback(
-          `Error downloading GeoNames ${dataName} data` +
-            (err ? ': ' + err : '')
-        );
-      })
-      .on('response', (response) => {
-        if (response.statusCode !== 200) {
-          callback('Error downloading GeoNames ${dataName} data');
-        }
-      })
-      .pipe(unzip.Parse())
-      .on('entry', (entry) => {
-        var entryPath = entry.path;
-        var entryType = entry.type; // 'Directory' or 'File'
-        var entrySize = entry.size; // might be undefined in some archives
-        if (entryType === 'File' && entryPath === fileNameInsideZip) {
-          debug(
-            `Unzipping GeoNames ${dataName} data - found ${entryType} ${entryPath}` +
-              (typeof entrySize === 'number' ? ` (${entrySize} B)` : '')
+
+    fetch(geonamesUrl)
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(
+            `Error downloading GeoNames ${dataName} data (response ${response.status} for url ${geonamesUrl})`
           );
-          foundFiles++;
-          entry.pipe(fs.createWriteStream(tempFilePath)).on('finish', () => {
-            debug(`- unzipped GeoNames ${dataName} data - ${entryPath}`);
-            this._housekeepingSync(
-              outputFileFolderWithoutSlash,
-              outputFileName
+        }
+
+        response.body
+          .on('error', (err) => {
+            throw new Error(
+              `Error downloading GeoNames ${dataName} data` +
+                (err ? ': ' + err : '')
             );
-            // file is now written, call callback
-            return callback(null, outputFilePath);
+          })
+          .pipe(unzip.Parse())
+          .on('entry', (entry) => {
+            var entryPath = entry.path;
+            var entryType = entry.type; // 'Directory' or 'File'
+            var entrySize = entry.size; // might be undefined in some archives
+            if (entryType === 'File' && entryPath === fileNameInsideZip) {
+              debug(
+                `Unzipping GeoNames ${dataName} data - found ${entryType} ${entryPath}` +
+                  (typeof entrySize === 'number' ? ` (${entrySize} B)` : '')
+              );
+              foundFiles++;
+              entry
+                .pipe(fs.createWriteStream(tempFilePath))
+                .on('finish', () => {
+                  debug(`- unzipped GeoNames ${dataName} data - ${entryPath}`);
+                  this._housekeepingSync(
+                    outputFileFolderWithoutSlash,
+                    outputFileName
+                  );
+                  // file is now written, call callback
+                  return callback(null, outputFilePath);
+                });
+            } else {
+              debug(
+                `Unzipping GeoNames ${dataName} data - ignoring ${entryType} ${entryPath}`
+              );
+              entry.autodrain();
+            }
+          })
+          .on('finish', () => {
+            // beware - this event is a finish of unzip, finish event of writeStream may and will happen later ...
+            if (foundFiles === 1) {
+              // ... so if we found one file, we call callback in it's finish event above
+              debug(`Unzipped GeoNames ${dataName} data.`);
+              // return callback(null, outputFilePath);
+            } else {
+              // .. while if there is something unexpected, we fire callback here
+              debug(
+                `Error unzipping ${geonamesZipFilename}: Was expecting ${outputFileName}, found ${foundFiles} file(s).`
+              );
+              throw new Error(
+                `Was expecting ${outputFileName}, found ${foundFiles} file(s).`
+              );
+            }
           });
-        } else {
-          debug(
-            `Unzipping GeoNames ${dataName} data - ignoring ${entryType} ${entryPath}`
-          );
-          entry.autodrain();
-        }
       })
-      .on('finish', () => {
-        // beware - this event is a finish of unzip, finish event of writeStream may and will happen later ...
-        if (foundFiles === 1) {
-          // ... so if we found one file, we call callback in it's finish event above
-          debug(`Unzipped GeoNames ${dataName} data.`);
-          // return callback(null, outputFilePath);
-        } else {
-          // .. while if there is something unexpected, we fire callback here
-          debug(
-            `Error unzipping ${geonamesZipFilename}: Was expecting ${outputFileName}, found ${foundFiles} file(s).`
-          );
-          return callback(
-            `Was expecting ${outputFileName}, found ${foundFiles} file(s).`
-          );
-        }
+      .catch((err) => {
+        callback(err);
       });
   },
 
   _housekeepingSync: function (outputFileFolderWithoutSlash, outputFileName) {
     const tempFilePath = `${outputFileFolderWithoutSlash}/temp-${outputFileName}`;
     if (fs.existsSync(tempFilePath)) {
-      fs.renameSync(tempFilePath, `${outputFileFolderWithoutSlash}/${outputFileName}`);
+      fs.renameSync(
+        tempFilePath,
+        `${outputFileFolderWithoutSlash}/${outputFileName}`
+      );
       fs.readdirSync(outputFileFolderWithoutSlash).forEach((foundFile) => {
         if (foundFile !== outputFileName) {
           fs.unlinkSync(`${outputFileFolderWithoutSlash}/${foundFile}`);
@@ -835,7 +850,7 @@ var geocoder = {
       functions[i] = function (innerCallback) {
         var result = that._kdTree.nearest(point, maxResults);
         // Sort by distance
-        result.sort(function(a, b) {
+        result.sort(function (a, b) {
           return a[1] - b[1];
         });
         for (var j = 0, lenJ = result.length; j < lenJ; j++) {

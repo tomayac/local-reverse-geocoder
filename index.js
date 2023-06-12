@@ -31,15 +31,16 @@
 
 var debug = require('debug')('local-reverse-geocoder');
 var fs = require('fs');
-var path = require('path');
 var parser = require('csv-parse');
 var parse = parser.parse;
 var kdTree = require('kdt');
-var fetch = require('node-fetch');
 var unzip = require('unzip-stream');
 var async = require('async');
 var readline = require('readline');
 const { basename } = require('path');
+// mod.cjs
+const fetch = (...args) =>
+  import('node-fetch').then(({ default: fetch }) => fetch(...args));
 
 // All data from http://download.geonames.org/export/dump/
 var GEONAMES_URL = 'https://download.geonames.org/export/dump/';
@@ -140,7 +141,7 @@ var geocoder = {
     downloadMethodBoundToThis,
     callback
   ) {
-    const now = new Date().toISOString().substr(0, 10);
+    const now = new Date().toISOString().substring(0, 10);
 
     // Use timestamped file OR bare file
     const timestampedBasename = `${baseName}_${now}.txt`;
@@ -193,7 +194,7 @@ var geocoder = {
       .then((response) => {
         if (!response.ok) {
           throw new Error(
-            `Error downloading GeoNames ${dataName} data (response ${response.status} for url ${geonamesUrl})`
+            `Error downloading GeoNames ${dataName} data (response ${response.status} for URL ${geonamesUrl})`
           );
         }
 
@@ -241,7 +242,7 @@ var geocoder = {
       .then((response) => {
         if (!response.ok) {
           throw new Error(
-            `Error downloading GeoNames ${dataName} data (response ${response.status} for url ${geonamesUrl})`
+            `Error downloading GeoNames ${dataName} data (response ${response.status} for URL ${geonamesUrl})`
           );
         }
 
@@ -256,7 +257,7 @@ var geocoder = {
           .on('entry', (entry) => {
             var entryPath = entry.path;
             var entryType = entry.type; // 'Directory' or 'File'
-            var entrySize = entry.size; // might be undefined in some archives
+            var entrySize = entry.size; // Might be undefined in some archives
             if (entryType === 'File' && entryPath === fileNameInsideZip) {
               debug(
                 `Unzipping GeoNames ${dataName} data - found ${entryType} ${entryPath}` +
@@ -282,13 +283,12 @@ var geocoder = {
             }
           })
           .on('finish', () => {
-            // beware - this event is a finish of unzip, finish event of writeStream may and will happen later ...
+            // Beware - this event is a finish of unzip, finish event of writeStream may and will happen later...
             if (foundFiles === 1) {
-              // ... so if we found one file, we call callback in it's finish event above
+              // ...so if we found one file, we call callback in it's finish event above
               debug(`Unzipped GeoNames ${dataName} data.`);
-              // return callback(null, outputFilePath);
             } else {
-              // .. while if there is something unexpected, we fire callback here
+              // ...while if there is something unexpected, we fire callback here
               debug(
                 `Error unzipping ${geonamesZipFilename}: Was expecting ${outputFileName}, found ${foundFiles} file(s).`
               );

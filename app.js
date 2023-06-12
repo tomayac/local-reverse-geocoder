@@ -55,7 +55,7 @@ app.listen(port, function () {
   console.log('Local reverse geocoder listening on port ' + port);
   console.log('Initializing Geocoder…');
   console.log(
-    '(This may take a long time and will download ~300MB worth of data.)'
+    '(This may take a long time and will download ~2.29GB worth of data by default.)'
   );
   geocoder.init(
     {

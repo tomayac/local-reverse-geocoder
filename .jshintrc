@@ -4,5 +4,5 @@
   "node": true,
   "loopfunc": true,
   "expr": true,
-  "esversion": 6
+  "esversion": 11
 }

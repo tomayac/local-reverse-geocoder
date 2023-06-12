@@ -76,7 +76,7 @@ geocoder.init(
 );
 ```
 
-Optionally `init()` allows you to specify the directory that geonames files are
+Optionally `init()` allows you to specify the directory that GeoNames files are
 downloaded and cached in, and a specific cities database to be used.
 
 ```javascript
@@ -330,9 +330,9 @@ of disk space). All follow-up requests are lightning fast.
 ### Downloading specific sets of countries
 
 To reduce the time taken to initialize the data, you can manually configure it
-to only download a specific set of countries from Geonames. Do note that when
+to only download a specific set of countries from GeoNames. Do note that when
 you add a country code into the array, it will disable the geocoder from
-downloading all ~2GB(!) worth of data and only load the specified countries'
+downloading all ~2.29GB(!) worth of data and only load the specified countries'
 data. If you want to re-enable the geocoder to download all data, the countries
 array needs to be empty.
 
@@ -359,10 +359,10 @@ geocoder.init(
 
 ### Post-install script
 
-There's also the option of downloading the Geonames files via a post-install
-script.  
+There's also the option of downloading the GeoNames files via a post-install
+script.
 The script is invoked automatically after installation, but won't download any
-files without getting at least one of the init options in an env variable.  
+files without getting at least one of the init options in an env variable.
 The options should be specified with a `GEOCODER_POSTINSTALL_` prefix.
 
 #### Example of downloading the files via the post-install script
@@ -417,8 +417,8 @@ specific language governing permissions and limitations under the License.
 ## Acknowledgements
 
 This project was inspired by Richard Penman's Python
-[reverse geocoder](https://github.com/richardpenman/reverse_geocode/). It
-uses Ubilabs'
+[reverse geocoder](https://github.com/richardpenman/reverse_geocode/). It uses
+Ubilabs'
 [k-d-tree implementation](https://github.com/ubilabs/kd-tree-javascript) that
 was ported to Node.js by [Luke Arduini](https://github.com/luk-/node-kdt).
 

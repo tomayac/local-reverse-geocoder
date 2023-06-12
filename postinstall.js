@@ -18,6 +18,7 @@ const values = [
   GEOCODER_POSTINSTALL_ALTERNATE_NAMES,
   GEOCODER_POSTINSTALL_COUNTRIES,
 ];
+
 if (values.every((val) => typeof val === 'undefined')) {
   console.info(
     '[local-reverse-geocoder] post-install: No env variables detected. Doing nothing.'
@@ -26,6 +27,7 @@ if (values.every((val) => typeof val === 'undefined')) {
 }
 
 const geocoder = require('./index');
+
 try {
   console.info('[local-reverse-geocoder] post-install: Starting.');
   geocoder.init(

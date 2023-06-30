@@ -18,9 +18,9 @@ RUN apk add --no-cache curl && \
     curl -L -o admin2_codes/admin2Codes.txt http://download.geonames.org/export/dump/admin2Codes.txt && \
     curl -L -o all_countries/allCountries.zip http://download.geonames.org/export/dump/allCountries.zip && \
     curl -L -o alternate_names/alternateNames.zip http://download.geonames.org/export/dump/alternateNames.zip && \
-    curl -L -o cities/cities1000.zip http://download.geonames.org/export/dump/cities1000.zip && \
+    curl -L -o cities/cities500.zip http://download.geonames.org/export/dump/cities500.zip && \
     cd all_countries && unzip allCountries.zip && rm allCountries.zip && cd .. && \
-    cd cities && unzip cities1000.zip && rm cities1000.zip && cd .. && \
+    cd cities && unzip cities500.zip && rm cities500.zip && cd .. && \
     cd alternate_names && unzip alternateNames.zip && rm alternateNames.zip
 
 ENTRYPOINT ["npm"]

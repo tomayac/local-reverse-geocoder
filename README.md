@@ -87,6 +87,8 @@ geocoder.init({ dumpDirectory: '/tmp/geonames' }, function () {
 });
 ```
 
+By default, data will be downloaded and cached on every start of the application, creating files such as `admin1CodesASCII_2023-07-17.txt` in the cache directory. If you wish to reuse the existing downloaded files, you can rename them to remove the date, such as `admin1CodesASCII.txt`, which will suppress the download.
+
 ### Look Up
 
 ```javascript

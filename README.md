@@ -55,7 +55,7 @@ geocoder.init({}, function () {
 
 Optionally `init()` also allows you to specify which files to load data from.
 This reduces initialization time and the runtime memory footprint of the Node.js
-process. By default all files are loaded.
+process. By default, all files are loaded.
 
 ```javascript
 var geocoder = require('local-reverse-geocoder');
@@ -86,8 +86,6 @@ geocoder.init({ dumpDirectory: '/tmp/geonames' }, function () {
   // Ready to call lookUp and all files will be downloaded to /tmp/geonames
 });
 ```
-
-By default, data will be downloaded and cached on every start of the application, creating files such as `admin1CodesASCII_2023-07-17.txt` in the cache directory. If you wish to reuse the existing downloaded files, you can rename them to remove the date, such as `admin1CodesASCII.txt`, which will suppress the download.
 
 ### Look Up
 
@@ -383,9 +381,11 @@ npm install local-reverse-geocoder
 ## A Word on Data Freshness
 
 By default, the local [GeoNames dump](http://download.geonames.org/export/dump/)
-data gets refreshed each day. You can override this behavior by removing the
-timestamp from the files in the `./geonames_dump` download folder. If you don't
-need admin1, admin2, admin3, admin4 or alternate names you can turn them off in
+data gets refreshed each day, creating files such as
+`admin1CodesASCII_YYYY-MM-DD.txt` in the cache directory. If you wish to reuse
+the existing downloaded files, you can rename them to remove the date, such as
+`admin1CodesASCII.txt`, which will suppress the download. If you don't
+need admin1, admin2, admin3, admin4 or alternate names, you can turn them off in
 a manual init call and decrease load time.
 
 ## A Word on Memory Usage

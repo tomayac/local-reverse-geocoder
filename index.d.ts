@@ -51,6 +51,12 @@ export interface PointsEntry {
   longitude: number | string;
 }
 
+export interface AdminCodeObject {
+  name: string,
+  asciiName: string,
+  geoNameId: string,
+}
+
 export interface AddressObject {
   geoNameId: string;
   name: string;
@@ -62,10 +68,10 @@ export interface AddressObject {
   featureCode: string;
   countryCode: string;
   cc2?: string;
-  admin1Code: string;
-  admin2Code?: string;
-  admin3Code?: string;
-  admin4Code?: string;
+  admin1Code: AdminCodeObject;
+  admin2Code?: AdminCodeObject;
+  admin3Code?: AdminCodeObject;
+  admin4Code?: AdminCodeObject;
   population: string;
   elevation?: string;
   dem: string;

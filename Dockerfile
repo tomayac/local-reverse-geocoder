@@ -1,8 +1,8 @@
-FROM node:10.12.0-alpine
+FROM node:current-alpine
 
 WORKDIR /app
 
-ADD package.json package-lock.json /app/
+ADD package.json package-lock.json postinstall.js /app/
 RUN npm install
 ADD app.js index.js /app/
 

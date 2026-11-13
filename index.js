@@ -865,6 +865,8 @@ var geocoder = {
         });
         for (var j = 0, lenJ = result.length; j < lenJ; j++) {
           if (result && result[j] && result[j][0]) {
+            // Copy the cached row so that results do not share one object
+            result[j][0] = { ...result[j][0] };
             var countryCode = result[j][0].countryCode || '';
             var geoNameId = result[j][0].geoNameId || '';
             var admin1Code;

@@ -1,6 +1,6 @@
 {
   "name": "local-reverse-geocoder",
-  "version": "0.16.8",
+  "version": "0.17.0",
   "description": "Implements a local reverse geocoder based on GeoNames.",
   "main": "index.js",
   "types": "index.d.ts",
@@ -27,7 +27,7 @@
   "license": "Apache-2.0",
   "dependencies": {
     "async": "^3.2.6",
-    "csv-parse": "^6.2.1",
+    "csv-parse": "^7.0.3",
     "debug": "^4.4.3",
     "kdt": "^0.1.0",
     "node-fetch": "^3.3.2",
@@ -48,11 +48,11 @@
   "devDependencies": {
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
-    "@types/node": "^25.9.3",
+    "@types/node": "^26.6.6",
     "cors": "^2.8.6",
-    "express": "^5.2.1",
+    "express": "^5.3.0",
     "jsdoc": "^4.0.5",
     "jshint": "^2.13.6",
-    "prettier": "^3.8.4"
+    "prettier": "^3.10.1"
   }
 }
